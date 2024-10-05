@@ -120,6 +120,12 @@
 - service discovery: 서비스를 찾을 수 있는 전화번호부로 비유, 서비스를 등록하고 등록된 검색
   - client는 load balancer 혹은 API gateway에 요청 정보를 전달하고 이들은 service discovery를 통해 적절한 서비스를 찾아낸 후 호출
   - Eureka 자체가 웹 서비스 성격으로 동작
-- 사용 시 설정
+- 사용 시 설정 설명
   - main()이 있는 클래스에 붙은 annotation @EnableEurekaServer 확인
   - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
+
+### Eureka Service Discovery - 프로젝트 생성 및 기본 설정
+- 종속성으로 Eureka Server 추가 후 프로젝트 생성
+- main()이 있는 클래스에 붙은 @EnableEurekaServer 확인
+- application.yml에서 port, name, register-with-eureka, fetch-registry 설정
+- 설정된 포트에 브라우저로 요청하여 애플리케이션 동작 확인
