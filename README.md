@@ -113,3 +113,13 @@
   - easier REST client → FeignClient
   - visibility and monitoring → Zipkin Distributed Tracing, Netflix API gateway
   - fault tolerance → Hystrix
+
+## section 2. Service Discovery
+
+### Spring Cloud Netflix Eureka 소개
+- service discovery: 서비스를 찾을 수 있는 전화번호부로 비유, 서비스를 등록하고 등록된 검색
+  - client는 load balancer 혹은 API gateway에 요청 정보를 전달하고 이들은 service discovery를 통해 적절한 서비스를 찾아낸 후 호출
+  - Eureka 자체가 웹 서비스 성격으로 동작
+- 사용 시 설정
+  - main()이 있는 클래스에 붙은 annotation @EnableEurekaServer 확인
+  - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
