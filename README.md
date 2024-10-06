@@ -126,6 +126,17 @@
 
 ### Eureka Service Discovery - 프로젝트 생성 및 기본 설정
 - 종속성으로 Eureka Server 추가 후 프로젝트 생성
-- main()이 있는 클래스에 붙은 @EnableEurekaServer 확인
+- main()이 있는 클래스에 @EnableEurekaServer 붙임
 - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
 - 설정된 포트에 브라우저로 요청하여 애플리케이션 동작 확인
+
+### User Service - 프로젝트 생성
+- Eureka server의 client가 될 microservice 중 하나가 됨
+- 종속성으로 다음 추가 후 프로젝트 생성
+  - Eureka Discovery Client, Lombok, Spring Boot DevTools, Spring Web
+- main()이 있는 클래스에 @EnableDiscoveryClient 붙임
+  - @EnableEurekaClient를 붙여도 동작(@EnableEurekaClient가 @EnableDiscoveryClient의 구현)
+- application.yml 설정
+  - port, name 설정
+  - register-with-eureka, fetch-registry true 설정, service-url.defaultZone 설정
+
