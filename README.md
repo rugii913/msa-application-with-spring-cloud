@@ -124,13 +124,13 @@
   - main()이 있는 클래스에 붙은 annotation @EnableEurekaServer 확인
   - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
 
-### Eureka Service Discovery - 프로젝트 생성 및 기본 설정
+### Eureka Service Discovery - 프로젝트 생성 + 기본 설정
 - 종속성으로 Eureka Server 추가 후 프로젝트 생성
 - main()이 있는 클래스에 @EnableEurekaServer 붙임
 - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
 - 설정된 포트에 브라우저로 요청하여 애플리케이션 동작 확인
 
-### User Service - 프로젝트 생성
+### User Service - 프로젝트 생성 + discovery client 기본 설정, 동작 확인
 - Eureka server의 client가 될 microservice 중 하나가 됨
 - 종속성으로 다음 추가 후 프로젝트 생성
   - Eureka Discovery Client, Lombok, Spring Boot DevTools, Spring Web
@@ -139,4 +139,29 @@
 - application.yml 설정
   - port, name 설정
   - register-with-eureka, fetch-registry true 설정, service-url.defaultZone 설정
+- Eureka 대시보드(127.0.0.1:8761) 접속하여 등록된 user-service 인스턴스 확인
+  - cf. 등록된 인스턴스 application의 이름은 대소문자를 구분하지 않음, 대시보드에서는 USER-SERVICE처럼 모두 대문자로 표시됨
 
+### User Service - 등록 → 여러 user-service 프로세스 실행하여 Eureka 동작 확인
+- cf. 강의에서는 Maven을 사용하였고, Gradle을 사용했기에 명령어가 다름
+- (방법 1) IDE에서 여러 user-service 프로세스 실행하기
+  - IntelliJ의 구성 편집(Edit Configurations) → 실행/디버그 구성(Run/Debug Configurations) 창 설정에서 작업
+  - 기존 구성 복사 후 이름 중복되지 않도록 변경
+  - 포트 중복되지 않도록 두번째 프로세스를 실행할 때 VM options(Java system properties가 됨)에 다음을 작성
+    - `-Dserver.port=9002`
+  - Eureka 대시보드(127.0.0.1:8761) 접속하여 등록된 user-service 인스턴스 수 확인
+- (방법 2) Gradle task를 이용하여 실행
+  - `./gradlew bootRun --args="--server.port=9003"`
+  - `./gradlew bootRun --args="--server.port=9004"`
+  - cf. [Spring 공식 문서 - Passing Arguments to Your Application](https://docs.spring.io/spring-boot/gradle-plugin/running.html#running-your-application.passing-system-properties)
+  - cf. 강의에서는 다음을 사용
+    - `mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=9003"`
+    - Maven과 Gradle은 argument를 넘기는 방법도 다름
+- (방법 3) 빌드 후 jar 파일 command line으로 실행
+  - Gradle(혹은 Maven)을 사용하여 빌드
+  - user-service의 settings.gradle.kts가 있는 경로에서 ./gradlew bootJar 명령어를 실행하여 빌드
+    - cf. Maven인 경우 ./mvn compile package 등을 사용하여 빌드
+  - user-service의 build/libs/user-service-xxx.jar 파일을 실행
+    - `java -jar -Dserver.port=9003 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
+    - `java -jar -Dserver.port=9004 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
+      - cf. Maven인 경우 `java -jar -Dserver.port=9004 ./target/user-service-0.0.1-SNAPSHOT.jar`
