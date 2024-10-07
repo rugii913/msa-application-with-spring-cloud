@@ -165,3 +165,22 @@
     - `java -jar -Dserver.port=9003 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
     - `java -jar -Dserver.port=9004 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
       - cf. Maven인 경우 `java -jar -Dserver.port=9004 ./target/user-service-0.0.1-SNAPSHOT.jar`
+
+### User Service - Load Balancer → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
+- Spring Boot의 random port 지원
+  - 문제 인식: 인스턴스를 시작할 때마다 포트 번호를 일일히 입력하는 것은 귀찮은 작업
+  - 사용 방법: application.yml의 server.port를 0으로 기입
+    - 알아서 충돌하지 않는 port로 시작
+    - 서버 기동 시 -Dserver.port 등 포트를 지정하는 옵션을 모두 제거해줘야 함
+    - 실행/디버그 구성(Run/Debug Configurations)에서도 포트를 명시한 구성은 제거
+  - 포트 정보 확인 방법
+    - 서버 기동 시 로그 확인
+    - Eureka 대시보드의 Instances currently registered with Eureka에 있는
+      - Status 부분 링크처럼 클릭할 수 있는 요소에 mouse over하면 브라우저 왼쪽 하단에 포트 번호 표시
+  - 인스턴스 id 부여 방법 → Eureka 대시보드에서 인스턴스 정상적으로 표시하기
+    - 문제 인식: random port를 활용한 인스턴스를 여러 개 띄우고 Eureka에서 확인해봐도
+      - 192.168.0.1:uesr-service:0처럼 인스턴스는 하나만 표시될 것
+      - application.yml에 입력된 포트 번호를 가져오기 때문
+    - 인스턴스 id 부여하기
+      - application.yml에 다음 입력
+      - eureka.instance.instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
