@@ -166,7 +166,7 @@
     - `java -jar -Dserver.port=9004 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
       - cf. Maven인 경우 `java -jar -Dserver.port=9004 ./target/user-service-0.0.1-SNAPSHOT.jar`
 
-### User Service - Load Balancer → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
+### User Service - random port 인스턴스 시작 → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
 - Spring Boot의 random port 지원
   - 문제 인식: 인스턴스를 시작할 때마다 포트 번호를 일일히 입력하는 것은 귀찮은 작업
   - 사용 방법: application.yml의 server.port를 0으로 기입
@@ -184,3 +184,31 @@
     - 인스턴스 id 부여하기
       - application.yml에 다음 입력
       - eureka.instance.instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
+
+## section 3. API Gateway Service
+- 사용자 혹은 외부 시스템으로부터 받은 요청을 단일화하여 처리하기
+
+### API Gateway란?
+- 라우팅 설정에 따라 endpoint로 client를 대신하여 요청하고, 응답을 받으면 client에 다시 전달하는 proxy 역할
+  - 시스템 내부 구조는 숨기고, 외부 요청에 대해 적절한 형태로 가공하여 응답 가능
+- MSA를 사용하면서 단일 진입점을 가진 형태가 필요
+  - 각 microservice로의 모든 요청에 대한 진입 지점
+  - client에서 각 microservice를 직접 호출하지 않게 함
+    - client에서는 API gateway만 상대함
+- API gateway에서 할 수 있는 기능
+  - 인증 및 권한 부여
+  - microservice 검색 통합
+  - 응답 캐싱
+  - 일괄적인 정책 유지, 회로 차단, QoS 다시 시도
+  - 속도 제한
+  - 부하 분산(load balancing)
+  - 일괄적인 로깅, 추적, 상관 관계 등 기록
+  - 헤더, 쿼리 문자열 등 변환
+  - IP 허용 목록에 기반한 처리
+- Spring Cloud에서 MSA 간 통신
+  - 구현하기 위한 도구 → RestTemplate(IP, port 명시), FeignClient(인터페이스 사용, 서비스 이름으로 호출), ... 등
+  - 그러면 통신 시 load balancer를 어디에 둘 것인가?
+    - Ribbon → client side, 서비스 이름으로 호출 / 비동기 처리가 어려운 단점 / Spring Boot 2.4부터 maintenance
+    - Zuul → server side, 라우팅, API gateway 역할 / Spring Boot 2.4부터 maintenance
+      - [Ribbon, Zuul의 maintanence 상태 관련 참고](https://spring.io/blog/2018/12/12/spring-cloud-greenwich-rc1-available-now#spring-cloud-netflix-projects-entering-maintenance-mode)
+    - 위 둘 대신 Spring Cloud Gateway를 사용할 것을 권장
