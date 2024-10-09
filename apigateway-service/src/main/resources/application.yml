@@ -1,0 +1,25 @@
+server:
+  port: 8000
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  application:
+    name: apigateway-service
+  cloud:
+    gateway:
+      mvc: # cf. 강의에는 이 계층이 없음
+        routes: # 리스트 형태로 여러 개의 route 객체 등록
+          - id: first-service
+            uri: http://localhost:8081
+            predicates: # 조건절
+              - Path=/first-service/**
+          - id: second-service
+            uri: http://localhost:8082
+            predicates: # 조건절
+              - Path=/second-service/**
