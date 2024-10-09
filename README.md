@@ -211,4 +211,26 @@
     - Ribbon → client side, 서비스 이름으로 호출 / 비동기 처리가 어려운 단점 / Spring Boot 2.4부터 maintenance
     - Zuul → server side, 라우팅, API gateway 역할 / Spring Boot 2.4부터 maintenance
       - [Ribbon, Zuul의 maintanence 상태 관련 참고](https://spring.io/blog/2018/12/12/spring-cloud-greenwich-rc1-available-now#spring-cloud-netflix-projects-entering-maintenance-mode)
-    - 위 둘 대신 Spring Cloud Gateway를 사용할 것을 권장
+    - 위 둘 대신 Spring Cloud Gateway를 사용할 것을 권장 - 비동기 처리 가능
+
+### Netflix Zuul - 프로젝트 생성, Netflix Zuul - Filter 적용
+- 이미 deprecated 표시된 지 오래되었고, 최신 Spring Boot에서는 사용할 수 없으므로 생략
+
+### Spring Cloud Gateway란?
+- API gateway 역할, routing 기능
+
+### Spring Cloud Gateway - 프로젝트 생성 + routes 등록
+- Eureka client로 등록할 first-service, second-service 프로젝트 생성(강의에서는 Netflix Zuul - 프로젝트 생성 부분에 포함된 내용)
+  - 종속성: DeveloperTools의 Lombok, Web의 Spirng Web, Spring Cloud Discovery의 Eureka Discovery Client
+  - 기능은 간단한 문자열 반환
+- Spring Cloud Gateway 프로젝트 시작 시 종속성
+  - DeveloperTools의 Lombok
+  - Spring Cloud Discovery의 Eureka Discovery Client
+  - Spring Cloud Routing의 Gateway
+- apigateway-service
+  - apigateway-service라는 artifact를 가진 Spring Cloud Gateway 생성
+  - route 객체를 등록하도록 적절하게 application.yml 작성
+    - cf. 단순히 predicates의 Path만 적을 경우 조건 만족 여부만 판단
+      - 요청 url에서 중복되는 prefix 같은 부분을 자동으로 제거해주지 않음
+- cf. 강의에서는 기본적으로 Tomcat이 아닌 Netty로 기동된다고 했지만 그 동안 변경사항이 있는 것으로 보임
+
