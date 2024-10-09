@@ -1,0 +1,14 @@
+server:
+  port: 0 # Spring Boot의 random port 지원
+
+spring:
+  application:
+    name: user-service
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true # Eureka 서버로부터 인스턴스들의 정보를 주기적으로 받음
+    service-url: # Eureka 서버의 위치를 지정
+      defaultZone: http://127.0.0.1:8761/eureka # 이 endpoint에 microservice 정보를 등록할 것
+  instance:
+    instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}

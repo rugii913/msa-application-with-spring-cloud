@@ -113,3 +113,74 @@
   - easier REST client → FeignClient
   - visibility and monitoring → Zipkin Distributed Tracing, Netflix API gateway
   - fault tolerance → Hystrix
+
+## section 2. Service Discovery
+
+### Spring Cloud Netflix Eureka 소개
+- service discovery: 서비스를 찾을 수 있는 전화번호부로 비유, 서비스를 등록하고 등록된 검색
+  - client는 load balancer 혹은 API gateway에 요청 정보를 전달하고 이들은 service discovery를 통해 적절한 서비스를 찾아낸 후 호출
+  - Eureka 자체가 웹 서비스 성격으로 동작
+- 사용 시 설정 설명
+  - main()이 있는 클래스에 붙은 annotation @EnableEurekaServer 확인
+  - application.yml에서 port, name, register-with-eureka, fetch-registry 설정
+
+### Eureka Service Discovery - 프로젝트 생성 + 기본 설정
+- 종속성으로 Eureka Server 추가 후 프로젝트 생성
+- main()이 있는 클래스에 @EnableEurekaServer 붙임
+- application.yml에서 port, name, register-with-eureka, fetch-registry 설정
+- 설정된 포트에 브라우저로 요청하여 애플리케이션 동작 확인
+
+### User Service - 프로젝트 생성 + discovery client 기본 설정, 동작 확인
+- Eureka server의 client가 될 microservice 중 하나가 됨
+- 종속성으로 다음 추가 후 프로젝트 생성
+  - Eureka Discovery Client, Lombok, Spring Boot DevTools, Spring Web
+- main()이 있는 클래스에 @EnableDiscoveryClient 붙임
+  - @EnableEurekaClient를 붙여도 동작(@EnableEurekaClient가 @EnableDiscoveryClient의 구현)
+- application.yml 설정
+  - port, name 설정
+  - register-with-eureka, fetch-registry true 설정, service-url.defaultZone 설정
+- Eureka 대시보드(127.0.0.1:8761) 접속하여 등록된 user-service 인스턴스 확인
+  - cf. 등록된 인스턴스 application의 이름은 대소문자를 구분하지 않음, 대시보드에서는 USER-SERVICE처럼 모두 대문자로 표시됨
+
+### User Service - 등록 → 여러 user-service 프로세스 실행하여 Eureka 동작 확인
+- cf. 강의에서는 Maven을 사용하였고, Gradle을 사용했기에 명령어가 다름
+- (방법 1) IDE에서 여러 user-service 프로세스 실행하기
+  - IntelliJ의 구성 편집(Edit Configurations) → 실행/디버그 구성(Run/Debug Configurations) 창 설정에서 작업
+  - 기존 구성 복사 후 이름 중복되지 않도록 변경
+  - 포트 중복되지 않도록 두번째 프로세스를 실행할 때 VM options(Java system properties가 됨)에 다음을 작성
+    - `-Dserver.port=9002`
+  - Eureka 대시보드(127.0.0.1:8761) 접속하여 등록된 user-service 인스턴스 수 확인
+- (방법 2) Gradle task를 이용하여 실행
+  - `./gradlew bootRun --args="--server.port=9003"`
+  - `./gradlew bootRun --args="--server.port=9004"`
+  - cf. [Spring 공식 문서 - Passing Arguments to Your Application](https://docs.spring.io/spring-boot/gradle-plugin/running.html#running-your-application.passing-system-properties)
+  - cf. 강의에서는 다음을 사용
+    - `mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=9003"`
+    - Maven과 Gradle은 argument를 넘기는 방법도 다름
+- (방법 3) 빌드 후 jar 파일 command line으로 실행
+  - Gradle(혹은 Maven)을 사용하여 빌드
+  - user-service의 settings.gradle.kts가 있는 경로에서 ./gradlew bootJar 명령어를 실행하여 빌드
+    - cf. Maven인 경우 ./mvn compile package 등을 사용하여 빌드
+  - user-service의 build/libs/user-service-xxx.jar 파일을 실행
+    - `java -jar -Dserver.port=9003 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
+    - `java -jar -Dserver.port=9004 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
+      - cf. Maven인 경우 `java -jar -Dserver.port=9004 ./target/user-service-0.0.1-SNAPSHOT.jar`
+
+### User Service - Load Balancer → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
+- Spring Boot의 random port 지원
+  - 문제 인식: 인스턴스를 시작할 때마다 포트 번호를 일일히 입력하는 것은 귀찮은 작업
+  - 사용 방법: application.yml의 server.port를 0으로 기입
+    - 알아서 충돌하지 않는 port로 시작
+    - 서버 기동 시 -Dserver.port 등 포트를 지정하는 옵션을 모두 제거해줘야 함
+    - 실행/디버그 구성(Run/Debug Configurations)에서도 포트를 명시한 구성은 제거
+  - 포트 정보 확인 방법
+    - 서버 기동 시 로그 확인
+    - Eureka 대시보드의 Instances currently registered with Eureka에 있는
+      - Status 부분 링크처럼 클릭할 수 있는 요소에 mouse over하면 브라우저 왼쪽 하단에 포트 번호 표시
+  - 인스턴스 id 부여 방법 → Eureka 대시보드에서 인스턴스 정상적으로 표시하기
+    - 문제 인식: random port를 활용한 인스턴스를 여러 개 띄우고 Eureka에서 확인해봐도
+      - 192.168.0.1:uesr-service:0처럼 인스턴스는 하나만 표시될 것
+      - application.yml에 입력된 포트 번호를 가져오기 때문
+    - 인스턴스 id 부여하기
+      - application.yml에 다음 입력
+      - eureka.instance.instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
