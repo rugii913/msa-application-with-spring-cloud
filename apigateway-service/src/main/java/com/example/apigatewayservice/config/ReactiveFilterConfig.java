@@ -2,13 +2,11 @@ package com.example.apigatewayservice.config;
 
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
+// @Configuration // gateway 구성 시 yml 파일을 사용하며 주석 처리
 public class ReactiveFilterConfig {
 
-    @Bean
+    // @Bean // gateway 구성 시 yml 파일을 사용하며 주석 처리
     /*
     * cf. reactive에서도 RouterFunction을 그대로 사용할 수 있는 듯함
     * - 다만 RouteLocatorBuilder를 사용하면

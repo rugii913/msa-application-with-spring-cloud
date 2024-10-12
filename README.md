@@ -291,6 +291,7 @@
   - filters() 구성 시 addRequestHeader(), addResponseHeader()로 요청, 응답 헤더 추가 동작 확인
 
 ### Spring Cloud Gateway - application.yml 파일로 filter 구성하기
+- 앞서 `### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway filter 동작`에서 작성한 파일에서 mvc 계층만 삭제
 
 
 
