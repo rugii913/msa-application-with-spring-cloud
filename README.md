@@ -250,6 +250,9 @@
   - application.yml 설정과 비교해보면 
     - routes의 uri 부분은 Handlerfunction이 되고
     - predicates 부분은 RequestPredicates가 된다고 보면 될 것
+  - 빌드된 RouterFunction에 대해 filter() 메서드 체이닝을 사용하려면 다음처럼 사용
+    - HandlerFilterFunction.ofRequestProcessor(BeforeFilterFunctions...)
+    - HandlerFilterFunction.ofResponseProcessor(AfterFilterFunctions...)
 
 ### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway 동작
 - 앞서 `### Spring Cloud Gateway - 프로젝트 생성 + routes 등록`에서 진행했던 부분에서
