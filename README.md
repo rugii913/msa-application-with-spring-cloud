@@ -234,3 +234,27 @@
       - 요청 url에서 중복되는 prefix 같은 부분을 자동으로 제거해주지 않음
 - cf. 강의에서는 기본적으로 Tomcat이 아닌 Netty로 기동된다고 했지만 그 동안 변경사항이 있는 것으로 보임
 
+### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 Java 코드를  활용한 gateway 동작
+- RouteLocator는 spring-cloud-starter-gateway-mvc에는 존재하지 않음
+- 참고 문서
+  - [How to Include Spring Cloud Gateway Server MVC](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/starter.html)
+  - [How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/how-it-works.html)
+  - [Java Routes API](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/java-routes-api.html)
+  - [Gateway Request Predicates
+](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/gateway-request-predicates.html#path-request-predicate)
+  - [AddRequestHeader Filter](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/filters/addrequestheader.html)
+- 사용 방법
+  - spring-cloud-starter-gateway가 아닌 spring-cloud-starter-gateway-mvc를 사용할 경우
+    - RouteLocator 대신 org.springframework.web.servlet.function.RouterFunction 사용
+  - @Bean을 붙이는 메서드에서 따로 builder를 주입받지 않고 RouterFunctions.route() static 메서드를 이용하여 빌더 시작
+  - routes의 uri 부분은 Handlerfunction이 되고
+    - predicates 부분은 RequestPredicates가 된다고 보면 될 것
+
+### Spring Cloud Gateway - filter로서의 동작
+
+### Spring Cloud Gateway - Java 코드로 filter 구성하기
+
+### Spring Cloud Gateway - application.yml 파일로 filter 구성하기
+
+
+
