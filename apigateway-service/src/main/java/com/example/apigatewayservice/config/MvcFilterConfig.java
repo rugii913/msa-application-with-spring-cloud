@@ -1,15 +1,6 @@
 package com.example.apigatewayservice.config;
 
-import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
-import org.springframework.cloud.gateway.server.mvc.predicate.GatewayRequestPredicates;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.RouterFunctions;
-import org.springframework.web.servlet.function.ServerResponse;
-
-import static org.springframework.cloud.gateway.server.mvc.filter.AfterFilterFunctions.addResponseHeader;
-import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.addRequestHeader;
 
 @Configuration
 public class MvcFilterConfig {
@@ -17,6 +8,8 @@ public class MvcFilterConfig {
     /*
     * Spring Cloud Gateway Server MVC에서 router 사용하기 → README.md의 "(별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 Java 코드를  활용한 gateway 동작" 부분 참고
     * */
+    // application.yml을 이용한 설정 사용 및 spring-cloud-starter-gateway 종속성으로 라우팅 및 필터 기능을 사용하기 위해 주석 처리
+    /*
     @Bean
     public RouterFunction<ServerResponse> gatewayRoutes() {
         // cf. RouterFunctions.route(RequestPredicate predicate, HandlerFunction<T> handlerFunction)는 바로 RouterFunction<T>를 return 함
@@ -35,4 +28,5 @@ public class MvcFilterConfig {
 
         return firstServiceRouterFunction.and(secondServiceRouterFunction);
     }
+     */
 }
