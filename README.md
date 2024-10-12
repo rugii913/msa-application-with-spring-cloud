@@ -234,7 +234,27 @@
       - 요청 url에서 중복되는 prefix 같은 부분을 자동으로 제거해주지 않음
 - cf. 강의에서는 기본적으로 Tomcat이 아닌 Netty로 기동된다고 했지만 그 동안 변경사항이 있는 것으로 보임
 
-### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 Java 코드를 활용한 gateway 동작
+### Spring Cloud Gateway - filter로서의 동작
+- 참고 문서
+  - Spring Cloud Gateway는 어떻게 동작하는가?
+    - [Spring Cloud Gateway Reactive Server - How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/how-it-works.html)
+    - cf. [Spring Cloud Gateway Server MVC - How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/how-it-works.html)
+  - reactive gateway 구글링
+    - [\[Spring\] spring cloud reactive gateway 사용시 주의할 점](https://bbidag.tistory.com/30)
+    - [기타 블로그 - \[SCG\] Spring Cloud Gateway는 왜 Netty 기반으로 만들어졌을까? 그리고 WebFlux란?](https://mingyum119.tistory.com/252)
+    - [기타 블로그 - Spring Cloud Gateway가 netty 기반 reactive web application으로 구동되는 이유](https://ykh6242.tistory.com/entry/Spring-Cloud-Gateway%EA%B0%80-netty-%EA%B8%B0%EB%B0%98-reactive-web-application%EC%9C%BC%EB%A1%9C-%EA%B5%AC%EB%8F%99%EB%90%98%EB%8A%94-%EC%9D%B4%EC%9C%A0)
+- Spring Cloud Gateway 및 그 filter의 동작 방식
+  - Spring Cloud Gateway는 client의 요청에 따라 서비스를 분기
+  - 자세하게 보면
+    - Gateway Handler Mapping: client로부터 어떤 요청이 들어왔는지, 요청 정보를 받음
+    - Predicate: 사전에 설정한 조건, 이 조건에 따라 요청을 분기
+    - Pre Filter, Post Filter: 요청, 응답 정보를 재구성
+      - Post Filter 처리 이후 다시 Gateway Handler Mapping을 거쳐 응답이 client로 나감
+  - Spring Cloud Gateway 설정 방식
+    - Java 코드 방식
+    - property 방식 → application.yml 파일 등에 설정 정보를 정의
+
+### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 Java 코드를 활용한 gateway filter동작
 - RouteLocator는 spring-cloud-starter-gateway-mvc에는 존재하지 않음
 - 참고 문서
   - [How to Include Spring Cloud Gateway Server MVC](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/starter.html)
@@ -254,7 +274,7 @@
     - HandlerFilterFunction.ofRequestProcessor(BeforeFilterFunctions...)
     - HandlerFilterFunction.ofResponseProcessor(AfterFilterFunctions...)
 
-### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway 동작
+### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway filter 동작
 - 앞서 `### Spring Cloud Gateway - 프로젝트 생성 + routes 등록`에서 진행했던 부분에서
   - 각 route에 filters만 추가
   - ex. filters: - AddRequestHeader=first-request, first-request-header - AddResponseHeader=first-response, first-response-header
