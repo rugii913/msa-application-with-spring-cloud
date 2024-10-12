@@ -21,14 +21,18 @@ public class MvcFilterConfig {
     public RouterFunction<ServerResponse> gatewayRoutes() {
         // cf. RouterFunctions.route(RequestPredicate predicate, HandlerFunction<T> handlerFunction)는 바로 RouterFunction<T>를 return 함
         // - 빌더로 메서드 체인을 사용하고 싶다면 RouterFunctions.route()으로 Builder 객체를 가져온 뒤 Builder의 route()를 사용해야 함
-        return RouterFunctions.route()
+        final var firstServiceRouterFunction = RouterFunctions.route()
                 .route(GatewayRequestPredicates.path("/first-service/**"), HandlerFunctions.http("http://localhost:8081"))
                 .before(addRequestHeader("first-request", "first-request-header"))
                 .after(addResponseHeader("first-response", "first-response-header"))
+                .build();
+
+        final var secondServiceRouterFunction = RouterFunctions.route()
                 .route(GatewayRequestPredicates.path("/second-service/**"), HandlerFunctions.http("http://localhost:8082"))
                 .before(addRequestHeader("second-request", "second-request-header"))
                 .after(addResponseHeader("second-response", "second-response-header"))
                 .build();
-        // cf. (잘못 동작하는 코드) 이렇게 작성할 경우 "/first-service/**", "/second-service/**"으로 요청을 보내는 경우 모두에 first... second... 헤더가 붙어 나감
+
+        return firstServiceRouterFunction.and(secondServiceRouterFunction);
     }
 }
