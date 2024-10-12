@@ -279,9 +279,16 @@
   - 각 route에 filters만 추가
   - ex. filters: - AddRequestHeader=first-request, first-request-header - AddResponseHeader=first-response, first-response-header
 
-### Spring Cloud Gateway - filter로서의 동작
-
 ### Spring Cloud Gateway - Java 코드로 filter 구성하기
+- router 및 filter를 구성하는 Java 코드 작성
+  - org.springframework.cloud.gateway.route.RouteLocator, ....builder.RouteLocatorBuilder 사용
+  - application.yml 설정의 각 property와 대응되는 메서드를 사용
+    - predicates - Path에 해당하는 path()
+    - filters에 해당하는 filters()
+    - uri에 해당하는 uri()
+  - lambda(functional interface의 구현)를 사용하여 router 및 filter 구성
+    - `Function<PredicateSpec, Buildable<Route>>`, `Function<GatewayFilterSpec, UriSpec>`
+  - filters() 구성 시 addRequestHeader(), addResponseHeader()로 요청, 응답 헤더 추가 동작 확인
 
 ### Spring Cloud Gateway - application.yml 파일로 filter 구성하기
 
