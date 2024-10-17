@@ -22,6 +22,7 @@ spring:
           filters: # 필터
             - AddRequestHeader=first-request, first-request-header-yml
             - AddResponseHeader=first-response, first-response-header-yml
+            - CustomFilter
         - id: second-service
           uri: http://localhost:8082 # 이동될 주소
           predicates: # 조건절
@@ -29,6 +30,7 @@ spring:
           filters: # 필터
             - AddRequestHeader=second-request, second-request-header-yml
             - AddResponseHeader=second-response, second-response-header-yml
+            - CustomFilter
 # MVC gateway 사용 시 구성
 #  cloud:
 #    gateway:

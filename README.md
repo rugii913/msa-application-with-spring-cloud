@@ -293,5 +293,35 @@
 ### Spring Cloud Gateway - application.yml 파일로 filter 구성하기
 - 앞서 `### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway filter 동작`에서 작성한 파일에서 mvc 계층만 삭제
 
+### Spring Cloud Gateway - custom filter
+- filter 역할을 하는 custom filter bean을 등록하는 방식
+  - 앞서 Java 코드 혹은 application.yml 프로퍼티 설정으로 라우터에 필터를 추가한 것과 다른 방식
+  - 로그, 인증 처리, locale 변경 등 작업을 할 수 있음
+    - 예를 들어 pre filter에서 JWT의 유효성 검사 등
+- org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory를 구현하는 클래스를 @Component로 등록
+  - AbstractGatewayFilterFactory의 apply(Config config): GatewayFilter 메서드 하나를 구현
+  - 구현한 apply()의 동작이 필터(GatewayFilter)의 구현이 됨
+  - cf. AbstractGatewayFilterFactory가 필요로 하는 generic type은 AbstractConfigurable과 관련
+    - 특별한 configuration 정보가 필요할 경우 작성
+    - 내부 static class로 작성해도 상관 없음
+    - 특별히 필요한 config 정보가 없으면 내용이 없는 class로 놔두어도 잘 동작
+- application.yml 각 gateway route 중 filters 부분에 작성한 filter 클래스 이름을 명시
+  - 해당 filter를 필요로 하는 모든 라우트에 명시해줘야 함
+  
+- cf. GatewayFilter
+  - (parameter) exchange: ServerWebExchange, chain: GatewayFilterChain
+    - 비동기 방식인 reactive gateway에서는 exchange로부터 ServerHttpRequest, ServerHttpRespnse 타입 객체를 얻어올 수 있음
+    - 동기 방식 서버(ex. Tomcat)에서 사용하는 HttpServletRequest, HttpServletResponse와는 타입 자체가 다름
+  - (return) Mono<Void>
+    - post filter를 사용하지 않는다면, chain.filter(exchange)를 호출해서 얻는 Mono<Void> 객체를 반환
+    - post filter를 사용한다면
+      - chain.filter(exchange)를 호출해서 얻는 Mono 객체에 대해 .then() 메서드 체이닝을 사용
+      - .then(Mono.fromRunnable(...)) 과 같은 형태로 응답 시 filter 로직을 구현
+    - cf. Spring WebFlux에서 사용하는 Mono는 최대 하나의 요소를 생성하는 리액티브 스트림
+      - [Project Reactor docs](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html)
+        - then() 등 메서드에 대한 도식까지 나와있음
+      - [기타 블로그 - Reactor 의 탄생, 생성과 구독 \(역사, Publisher 구현체 Flux와 Mono, defer, Subscriber 직접구현\)](https://sjh836.tistory.com/185)
+      - [기타 블로그 - 2. Reactor Core \(Mono, Flux, Subscribe\)](https://beer1.tistory.com/17)
+
 
 
