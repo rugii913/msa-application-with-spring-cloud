@@ -14,6 +14,12 @@ spring:
 # reactive gateway 사용 시 구성
   cloud:
     gateway:
+      default-filters:
+        - name: GlobalFilter
+          args:
+            baseMessage: Spring Cloud Gateway global filter example
+            preLogger: true
+            postLogger: true
       routes: # 리스트 형태로 여러 개의 route 객체 등록
         - id: first-service
           uri: http://localhost:8081 # 이동될 주소

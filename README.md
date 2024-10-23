@@ -323,5 +323,20 @@
       - [기타 블로그 - Reactor 의 탄생, 생성과 구독 \(역사, Publisher 구현체 Flux와 Mono, defer, Subscriber 직접구현\)](https://sjh836.tistory.com/185)
       - [기타 블로그 - 2. Reactor Core \(Mono, Flux, Subscribe\)](https://beer1.tistory.com/17)
 
-
+### Spring Cloud Gateway - global filter
+- custom filter와 유사한 방식으로 작성 → AbstractGatewayFilterFactory 구현
+- global filter와 custom filter와의 차이점
+  - custom filter는 application.yml에서 개별 라우트에 적용할 필터를 명시했었던 것과는 달리
+  - 별도로 명시하지 않고도, 모든 라우트에서 공통적으로 적용되는 필터로 동작
+- cf. filter의 설정 정보 작성하기
+  - AbstractGatewayFilterFactory의 generic으로 지정하는 클래스가 설정 정보의 데이터 클래스가 됨
+  - application.yml에 설정 정보들을 명시하여 컨텍스트 구성 시 주입하게 되고
+  - apply() 구현 시 주입받은 설정 정보들을 사용하도록 유연하게 작성할 수 있음
+    - apply()가 parameter로 받은 config 객체가 generic에 명시된 데이터 클래스 객체임
+- application.yml에 global filter 설정 명시
+  - spring.cloud.gateway.default-filters로 name, (filter 설정 정보를 주입하는 경우) args 등을 명시
+  - 자세한 방법은 예제 파일 참고
+- filter 간 기본적인 실행 순서
+  - pre filter의 경우, global filter가 custom filter보다 먼저 실행
+  - post filter의 경우, global filter가 custom filter보다 나중에 실행
 
