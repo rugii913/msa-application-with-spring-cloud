@@ -355,3 +355,17 @@
   - order가 Ordered.HIGHEST_PRECEDENCE로 지정된 경우, global filter보다 먼저 실행
   - Ordered.LOWEST_PRECEDENCE로 지정된 경우, 가장 마지막으로 실행
 
+### Spring Cloud Gateway - load balancer(Eureka 서비스와의 연동)
+- 지금까지 작성한 각 서비스들의 역할
+  - Eureka server: 8761번 포트
+    - service registration과 discovery 담당
+  - first-service, second-service: 각 서비스를 가정한 간단한 서비스, first-service는 8081번 포트, second-service는 8082번 포트
+  - API gateway: 8000번 포트
+    - 클라이언트로부터의 요청을 앞에서 받고, Eureka를 통해 service를 discovery
+    - 요청 API에 따라 Eureka에서 각 service를 발견해내고, 각 service로 포워딩
+- Eureka Server를 사용할 때의 API gateway의 property 작성
+  - Eureka server를 naming server로 활용
+    - 앞서 작성했던 application.yml의 routes의 각 property와는 상당히 다름
+    - predicates는 그대로 두되, uri 부분에는 ip 주소, port 정보가 들어가지 않고, lb//...과 같은 방식으로 작성
+      - ... 부분에는 Eureka에 등록된 각 서비스의 이름을 작성
+- 서비스 실행 순서는 되도록 Eureka server 먼저 실행
