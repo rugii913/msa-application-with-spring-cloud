@@ -307,7 +307,6 @@
     - 특별히 필요한 config 정보가 없으면 내용이 없는 class로 놔두어도 잘 동작
 - application.yml 각 gateway route 중 filters 부분에 작성한 filter 클래스 이름을 명시
   - 해당 filter를 필요로 하는 모든 라우트에 명시해줘야 함
-  
 - cf. GatewayFilter
   - (parameter) exchange: ServerWebExchange, chain: GatewayFilterChain
     - 비동기 방식인 reactive gateway에서는 exchange로부터 ServerHttpRequest, ServerHttpRespnse 타입 객체를 얻어올 수 있음
@@ -335,8 +334,24 @@
     - apply()가 parameter로 받은 config 객체가 generic에 명시된 데이터 클래스 객체임
 - application.yml에 global filter 설정 명시
   - spring.cloud.gateway.default-filters로 name, (filter 설정 정보를 주입하는 경우) args 등을 명시
+  - **custom filter와는 이 부분에서 차이**가 남
   - 자세한 방법은 예제 파일 참고
 - filter 간 기본적인 실행 순서
   - pre filter의 경우, global filter가 custom filter보다 먼저 실행
   - post filter의 경우, global filter가 custom filter보다 나중에 실행
+  - OrderedGatewayFilter 등을 이용하여 order를 지정할 경우 실행 순서는 바뀔 수 있음
+
+### Spring Cloud Gateway - logging filter(OrderedGatewayFilter 타입을 이용하여 필터 동작 순서 조정)
+- GatewayFilter의 subtype인 OrderedGatewayFilter를 작성하는 방식으로 진행
+  - OrderedGatewatFilter 생성자의 파라미터 중 하나만 GatewayFilter delegate을 구현
+  - cf. GatewayFilter 타입의 filter() 메서드의 파라미터인 ServerWebExchange exchange, GatewayFilterChain chain에 대해서 더 살펴보면 좋을 것
+    - ServerWebExchange는 WebFlux에서 사용하는 타입
+  - order 값은 org.springframework.core.Ordered.HIGHEST_PRECEDENCE 인터페이스의 상수를 활용하여 작성해보기
+(활용 가능)
+- custom filter에 args를 넘겨야 할 때 application.yml 작성 방법
+  - 필터 클래스 이름만 명시하는 게 아니라 name, args 등을 구분하여 명시해줘야 함
+  - second-service 쪽에만 logging filter를 등록해본 뒤 동작을 확인해보기
+- OrderedGatewayFilter의 order에 따른 동작 확인
+  - order가 Ordered.HIGHEST_PRECEDENCE로 지정된 경우, global filter보다 먼저 실행
+  - Ordered.LOWEST_PRECEDENCE로 지정된 경우, 가장 마지막으로 실행
 

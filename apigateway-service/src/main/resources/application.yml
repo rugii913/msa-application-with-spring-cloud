@@ -37,6 +37,12 @@ spring:
             - AddRequestHeader=second-request, second-request-header-yml
             - AddResponseHeader=second-response, second-response-header-yml
             - CustomFilter
+            - name: LoggingFilter
+              args:
+                baseMessage: Hi, there.
+                preLogger: true
+                postLogger: true
+
 # MVC gateway 사용 시 구성
 #  cloud:
 #    gateway:
