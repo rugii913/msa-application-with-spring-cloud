@@ -1,0 +1,66 @@
+server:
+  port: 8000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  application:
+    name: apigateway-service
+# reactive gateway 사용 시 구성
+  cloud:
+    gateway:
+      default-filters:
+        - name: GlobalFilter
+          args:
+            baseMessage: Spring Cloud Gateway global filter example
+            preLogger: true
+            postLogger: true
+      routes: # 리스트 형태로 여러 개의 route 객체 등록
+        - id: first-service
+          # uri: http://localhost:8081 # 이동될 주소 직접 지정한 경우
+          uri: lb://MY-FIRST-SERVICE # Eureka server에 등록된 service 이름을 이용해 포워딩할 주소를 받아옴 - 통상적으로 해당 서비스 프로젝트의 application.yml 파일의 spring.application.name 프로퍼티 값(모두 대문자로 바뀜)으로 등록됨
+          predicates: # 조건절
+            - Path=/first-service/**
+          filters: # 필터
+            - AddRequestHeader=first-request, first-request-header-yml
+            - AddResponseHeader=first-response, first-response-header-yml
+            - CustomFilter
+        - id: second-service
+          # uri: http://localhost:8082 # 이동될 주소
+          uri: lb://MY-SECOND-SERVICE # Eureka server에 등록된 service 이름을 이용해 포워딩할 주소를 받아옴 - 통상적으로 해당 서비스 프로젝트의 application.yml 파일의 spring.application.name 프로퍼티 값(모두 대문자로 바뀜)으로 등록됨
+          predicates: # 조건절
+            - Path=/second-service/**
+          filters: # 필터
+            - AddRequestHeader=second-request, second-request-header-yml
+            - AddResponseHeader=second-response, second-response-header-yml
+            - CustomFilter
+            - name: LoggingFilter
+              args:
+                baseMessage: Hi, there.
+                preLogger: true
+                postLogger: true
+
+# MVC gateway 사용 시 구성
+#  cloud:
+#    gateway:
+#      mvc: # cf. MVC gateway에서는 이 계층이 필요
+#        routes: # 리스트 형태로 여러 개의 route 객체 등록
+#          - id: first-service
+#            uri: http://localhost:8081 # 이동될 주소
+#            predicates: # 조건절
+#              - Path=/first-service/**
+#            filters: # 필터
+#              - AddRequestHeader=first-request, first-request-header-yml
+#              - AddResponseHeader=first-response, first-response-header-yml
+#          - id: second-service
+#            uri: http://localhost:8082 # 이동될 주소
+#            predicates: # 조건절
+#              - Path=/second-service/**
+#            filters: # 필터
+#              - AddRequestHeader=second-request, second-request-header-yml
+#              - AddResponseHeader=second-response, second-response-header-yml

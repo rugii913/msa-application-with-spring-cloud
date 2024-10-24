@@ -166,7 +166,7 @@
     - `java -jar -Dserver.port=9004 ./build/libs/user-service-0.0.1-SNAPSHOT.jar`
       - cf. Maven인 경우 `java -jar -Dserver.port=9004 ./target/user-service-0.0.1-SNAPSHOT.jar`
 
-### User Service - Load Balancer → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
+### User Service - random port 인스턴스 시작 → Spring Boot의 random port 활용하여 여러 인스턴스 시작하기
 - Spring Boot의 random port 지원
   - 문제 인식: 인스턴스를 시작할 때마다 포트 번호를 일일히 입력하는 것은 귀찮은 작업
   - 사용 방법: application.yml의 server.port를 0으로 기입
@@ -184,3 +184,204 @@
     - 인스턴스 id 부여하기
       - application.yml에 다음 입력
       - eureka.instance.instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
+
+## section 3. API Gateway Service
+- 사용자 혹은 외부 시스템으로부터 받은 요청을 단일화하여 처리하기
+
+### API Gateway란?
+- 라우팅 설정에 따라 endpoint로 client를 대신하여 요청하고, 응답을 받으면 client에 다시 전달하는 proxy 역할
+  - 시스템 내부 구조는 숨기고, 외부 요청에 대해 적절한 형태로 가공하여 응답 가능
+- MSA를 사용하면서 단일 진입점을 가진 형태가 필요
+  - 각 microservice로의 모든 요청에 대한 진입 지점
+  - client에서 각 microservice를 직접 호출하지 않게 함
+    - client에서는 API gateway만 상대함
+- API gateway에서 할 수 있는 기능
+  - 인증 및 권한 부여
+  - microservice 검색 통합
+  - 응답 캐싱
+  - 일괄적인 정책 유지, 회로 차단, QoS 다시 시도
+  - 속도 제한
+  - 부하 분산(load balancing)
+  - 일괄적인 로깅, 추적, 상관 관계 등 기록
+  - 헤더, 쿼리 문자열 등 변환
+  - IP 허용 목록에 기반한 처리
+- Spring Cloud에서 MSA 간 통신
+  - 구현하기 위한 도구 → RestTemplate(IP, port 명시), FeignClient(인터페이스 사용, 서비스 이름으로 호출), ... 등
+  - 그러면 통신 시 load balancer를 어디에 둘 것인가?
+    - Ribbon → client side, 서비스 이름으로 호출 / 비동기 처리가 어려운 단점 / Spring Boot 2.4부터 maintenance
+    - Zuul → server side, 라우팅, API gateway 역할 / Spring Boot 2.4부터 maintenance
+      - [Ribbon, Zuul의 maintanence 상태 관련 참고](https://spring.io/blog/2018/12/12/spring-cloud-greenwich-rc1-available-now#spring-cloud-netflix-projects-entering-maintenance-mode)
+    - 위 둘 대신 Spring Cloud Gateway를 사용할 것을 권장 - 비동기 처리 가능
+
+### Netflix Zuul - 프로젝트 생성, Netflix Zuul - Filter 적용
+- 이미 deprecated 표시된 지 오래되었고, 최신 Spring Boot에서는 사용할 수 없으므로 생략
+
+### Spring Cloud Gateway란?
+- API gateway 역할, routing 기능
+
+### Spring Cloud Gateway - 프로젝트 생성 + routes 등록
+- Eureka client로 등록할 first-service, second-service 프로젝트 생성(강의에서는 Netflix Zuul - 프로젝트 생성 부분에 포함된 내용)
+  - 종속성: DeveloperTools의 Lombok, Web의 Spirng Web, Spring Cloud Discovery의 Eureka Discovery Client
+  - 기능은 간단한 문자열 반환
+- Spring Cloud Gateway 프로젝트 시작 시 종속성
+  - DeveloperTools의 Lombok
+  - Spring Cloud Discovery의 Eureka Discovery Client
+  - Spring Cloud Routing의 Gateway
+- apigateway-service
+  - apigateway-service라는 artifact를 가진 Spring Cloud Gateway 생성
+  - route 객체를 등록하도록 적절하게 application.yml 작성
+    - cf. 단순히 predicates의 Path만 적을 경우 조건 만족 여부만 판단
+      - 요청 url에서 중복되는 prefix 같은 부분을 자동으로 제거해주지 않음
+- cf. 강의에서는 기본적으로 Tomcat이 아닌 Netty로 기동된다고 했지만 그 동안 변경사항이 있는 것으로 보임
+
+### Spring Cloud Gateway - filter로서의 동작
+- 참고 문서
+  - Spring Cloud Gateway는 어떻게 동작하는가?
+    - [Spring Cloud Gateway Reactive Server - How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/how-it-works.html)
+    - cf. [Spring Cloud Gateway Server MVC - How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/how-it-works.html)
+  - reactive gateway 구글링
+    - [\[Spring\] spring cloud reactive gateway 사용시 주의할 점](https://bbidag.tistory.com/30)
+    - [기타 블로그 - \[SCG\] Spring Cloud Gateway는 왜 Netty 기반으로 만들어졌을까? 그리고 WebFlux란?](https://mingyum119.tistory.com/252)
+    - [기타 블로그 - Spring Cloud Gateway가 netty 기반 reactive web application으로 구동되는 이유](https://ykh6242.tistory.com/entry/Spring-Cloud-Gateway%EA%B0%80-netty-%EA%B8%B0%EB%B0%98-reactive-web-application%EC%9C%BC%EB%A1%9C-%EA%B5%AC%EB%8F%99%EB%90%98%EB%8A%94-%EC%9D%B4%EC%9C%A0)
+- Spring Cloud Gateway 및 그 filter의 동작 방식
+  - Spring Cloud Gateway는 client의 요청에 따라 서비스를 분기
+  - 자세하게 보면
+    - Gateway Handler Mapping: client로부터 어떤 요청이 들어왔는지, 요청 정보를 받음
+    - Predicate: 사전에 설정한 조건, 이 조건에 따라 요청을 분기
+    - Pre Filter, Post Filter: 요청, 응답 정보를 재구성
+      - Post Filter 처리 이후 다시 Gateway Handler Mapping을 거쳐 응답이 client로 나감
+  - Spring Cloud Gateway 설정 방식
+    - Java 코드 방식
+    - property 방식 → application.yml 파일 등에 설정 정보를 정의
+
+### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 Java 코드를 활용한 gateway filter동작
+- RouteLocator는 spring-cloud-starter-gateway-mvc에는 존재하지 않음
+- 참고 문서
+  - [How to Include Spring Cloud Gateway Server MVC](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/starter.html)
+  - [How It Works](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/how-it-works.html)
+  - [Java Routes API](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/java-routes-api.html)
+  - [Gateway Request Predicates
+](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/gateway-request-predicates.html#path-request-predicate)
+  - [AddRequestHeader Filter](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc/filters/addrequestheader.html)
+- 사용 방법
+  - spring-cloud-starter-gateway가 아닌 spring-cloud-starter-gateway-mvc를 사용할 경우
+    - RouteLocator 대신 org.springframework.web.servlet.function.RouterFunction 사용
+  - @Bean을 붙이는 메서드에서 따로 builder를 주입받지 않고 RouterFunctions.route() static 메서드를 이용하여 빌더 시작
+  - application.yml 설정과 비교해보면 
+    - routes의 uri 부분은 Handlerfunction이 되고
+    - predicates 부분은 RequestPredicates가 된다고 보면 될 것
+  - 빌드된 RouterFunction에 대해 filter() 메서드 체이닝을 사용하려면 다음처럼 사용
+    - HandlerFilterFunction.ofRequestProcessor(BeforeFilterFunctions...)
+    - HandlerFilterFunction.ofResponseProcessor(AfterFilterFunctions...)
+
+### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway filter 동작
+- 앞서 `### Spring Cloud Gateway - 프로젝트 생성 + routes 등록`에서 진행했던 부분에서
+  - 각 route에 filters만 추가
+  - ex. filters: - AddRequestHeader=first-request, first-request-header - AddResponseHeader=first-response, first-response-header
+
+### Spring Cloud Gateway - Java 코드로 filter 구성하기
+- router 및 filter를 구성하는 Java 코드 작성
+  - org.springframework.cloud.gateway.route.RouteLocator, ....builder.RouteLocatorBuilder 사용
+  - application.yml 설정의 각 property와 대응되는 메서드를 사용
+    - predicates - Path에 해당하는 path()
+    - filters에 해당하는 filters()
+    - uri에 해당하는 uri()
+  - lambda(functional interface의 구현)를 사용하여 router 및 filter 구성
+    - `Function<PredicateSpec, Buildable<Route>>`, `Function<GatewayFilterSpec, UriSpec>`
+  - filters() 구성 시 addRequestHeader(), addResponseHeader()로 요청, 응답 헤더 추가 동작 확인
+
+### Spring Cloud Gateway - application.yml 파일로 filter 구성하기
+- 앞서 `### (별도 진행) Spring Cloud Gateway MVC 종속성을 선택했을 때 application.yml 설정을 활용한 gateway filter 동작`에서 작성한 파일에서 mvc 계층만 삭제
+
+### Spring Cloud Gateway - custom filter
+- filter 역할을 하는 custom filter bean을 등록하는 방식
+  - 앞서 Java 코드 혹은 application.yml 프로퍼티 설정으로 라우터에 필터를 추가한 것과 다른 방식
+  - 로그, 인증 처리, locale 변경 등 작업을 할 수 있음
+    - 예를 들어 pre filter에서 JWT의 유효성 검사 등
+- org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory를 구현하는 클래스를 @Component로 등록
+  - AbstractGatewayFilterFactory의 apply(Config config): GatewayFilter 메서드 하나를 구현
+  - 구현한 apply()의 동작이 필터(GatewayFilter)의 구현이 됨
+  - cf. AbstractGatewayFilterFactory가 필요로 하는 generic type은 AbstractConfigurable과 관련
+    - 특별한 configuration 정보가 필요할 경우 작성
+    - 내부 static class로 작성해도 상관 없음
+    - 특별히 필요한 config 정보가 없으면 내용이 없는 class로 놔두어도 잘 동작
+- application.yml 각 gateway route 중 filters 부분에 작성한 filter 클래스 이름을 명시
+  - 해당 filter를 필요로 하는 모든 라우트에 명시해줘야 함
+- cf. GatewayFilter
+  - (parameter) exchange: ServerWebExchange, chain: GatewayFilterChain
+    - 비동기 방식인 reactive gateway에서는 exchange로부터 ServerHttpRequest, ServerHttpRespnse 타입 객체를 얻어올 수 있음
+    - 동기 방식 서버(ex. Tomcat)에서 사용하는 HttpServletRequest, HttpServletResponse와는 타입 자체가 다름
+  - (return) Mono<Void>
+    - post filter를 사용하지 않는다면, chain.filter(exchange)를 호출해서 얻는 Mono<Void> 객체를 반환
+    - post filter를 사용한다면
+      - chain.filter(exchange)를 호출해서 얻는 Mono 객체에 대해 .then() 메서드 체이닝을 사용
+      - .then(Mono.fromRunnable(...)) 과 같은 형태로 응답 시 filter 로직을 구현
+    - cf. Spring WebFlux에서 사용하는 Mono는 최대 하나의 요소를 생성하는 리액티브 스트림
+      - [Project Reactor docs](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html)
+        - then() 등 메서드에 대한 도식까지 나와있음
+      - [기타 블로그 - Reactor 의 탄생, 생성과 구독 \(역사, Publisher 구현체 Flux와 Mono, defer, Subscriber 직접구현\)](https://sjh836.tistory.com/185)
+      - [기타 블로그 - 2. Reactor Core \(Mono, Flux, Subscribe\)](https://beer1.tistory.com/17)
+
+### Spring Cloud Gateway - global filter
+- custom filter와 유사한 방식으로 작성 → AbstractGatewayFilterFactory 구현
+- global filter와 custom filter와의 차이점
+  - custom filter는 application.yml에서 개별 라우트에 적용할 필터를 명시했었던 것과는 달리
+  - 별도로 명시하지 않고도, 모든 라우트에서 공통적으로 적용되는 필터로 동작
+- cf. filter의 설정 정보 작성하기
+  - AbstractGatewayFilterFactory의 generic으로 지정하는 클래스가 설정 정보의 데이터 클래스가 됨
+  - application.yml에 설정 정보들을 명시하여 컨텍스트 구성 시 주입하게 되고
+  - apply() 구현 시 주입받은 설정 정보들을 사용하도록 유연하게 작성할 수 있음
+    - apply()가 parameter로 받은 config 객체가 generic에 명시된 데이터 클래스 객체임
+- application.yml에 global filter 설정 명시
+  - spring.cloud.gateway.default-filters로 name, (filter 설정 정보를 주입하는 경우) args 등을 명시
+  - **custom filter와는 이 부분에서 차이**가 남
+  - 자세한 방법은 예제 파일 참고
+- filter 간 기본적인 실행 순서
+  - pre filter의 경우, global filter가 custom filter보다 먼저 실행
+  - post filter의 경우, global filter가 custom filter보다 나중에 실행
+  - OrderedGatewayFilter 등을 이용하여 order를 지정할 경우 실행 순서는 바뀔 수 있음
+
+### Spring Cloud Gateway - logging filter(OrderedGatewayFilter 타입을 이용하여 필터 동작 순서 조정)
+- GatewayFilter의 subtype인 OrderedGatewayFilter를 작성하는 방식으로 진행
+  - OrderedGatewatFilter 생성자의 파라미터 중 하나만 GatewayFilter delegate을 구현
+  - cf. GatewayFilter 타입의 filter() 메서드의 파라미터인 ServerWebExchange exchange, GatewayFilterChain chain에 대해서 더 살펴보면 좋을 것
+    - ServerWebExchange는 WebFlux에서 사용하는 타입
+  - order 값은 org.springframework.core.Ordered.HIGHEST_PRECEDENCE 인터페이스의 상수를 활용하여 작성해보기
+(활용 가능)
+- custom filter에 args를 넘겨야 할 때 application.yml 작성 방법
+  - 필터 클래스 이름만 명시하는 게 아니라 name, args 등을 구분하여 명시해줘야 함
+  - second-service 쪽에만 logging filter를 등록해본 뒤 동작을 확인해보기
+- OrderedGatewayFilter의 order에 따른 동작 확인
+  - order가 Ordered.HIGHEST_PRECEDENCE로 지정된 경우, global filter보다 먼저 실행
+  - Ordered.LOWEST_PRECEDENCE로 지정된 경우, 가장 마지막으로 실행
+
+### Spring Cloud Gateway - load balancer + Eureka server와의 연동
+- 지금까지 작성한 각 서비스들의 역할
+  - Eureka server: 8761번 포트
+    - service registration과 discovery 담당
+  - first-service, second-service: 각 서비스를 가정한 간단한 서비스
+    - first-service는 8081번 포트, second-service는 8082번 포트 → 여러 인스턴스를 실행하는 상황을 가정하여 랜덤 포트 지정 방식으로 변경, server.port = 0으로 지정
+  - API gateway: 8000번 포트
+    - 클라이언트로부터의 요청을 앞에서 받고, Eureka를 통해 service를 discovery
+    - 요청 API에 따라 Eureka에서 각 service를 발견해내고, 각 service로 포워딩
+- Eureka Server를 사용할 때의 API gateway의 property 작성
+  - Eureka server를 naming server로 활용
+    - 앞서 작성했던 application.yml의 routes의 각 property와는 상당히 다름
+    - predicates는 그대로 두되, uri 부분에는 ip 주소, port 정보가 들어가지 않고, lb://...과 같은 방식으로 작성
+      - ... 부분에는 Eureka에 등록된 각 서비스의 이름을 작성
+      - `lb://` 는 이름을 이용해 naming service 안에 포함된 인스턴스를 찾겠다는 기호로 보면 됨
+        - 정확하게는 load balancer를 가리키는 프로토콜
+- 서비스 실행 순서는 되도록 Eureka server 먼저 실행
+- 같은 서비스를 여러 인스턴스로 띄우고, gateway 동작 및 Eureka의 discovery, load balancing 동작 확인
+  - server.port = 0으로 작성하여 랜덤 포트를 사용하도록 한 후 동작 확인
+  - 환경 변수 정보 객체인 Environment를 주입 받은 후 API 호출 시 로그로 찍도록 하여 어떤 인스턴스가 호출됐는지 눈으로 확인해보기
+  - round robin 방식으로 간단하게 로드 밸런싱 하고 있음을 확인할 수 있음
+
+### (개인적인 생각) Spring Cloud Gateway + Eureka를 사용하는 이유?
+- API gateway 기능이든, 요청 응답에 대한 필터링 기능이든, 로드 밸런싱 기능이든 모두
+  - Nginx와 같은 웹 서버 등 다른 손 쉽고 잘 알려진 도구를 이용해도 충분히 구현 가능
+- 그렇다면 Spring Cloud Gateway의 장점은?
+  - gateway와 service discovery 등이 다른 서비스들과 더 잘 상호작용하는 방식의 시스템을 구성할 수 있는 장점이 있지 않을까 생각
+  - 예를 들어 예제에서 보았듯 같은 마이크로 서비스의 여러 인스턴스가 기동 중일 때 ip 주소, 포트를 명시할 필요 없이
+    - 각 서비스가 시작할 때 Eureka에 등록하도록 하고, Spring Cloud Gateway는 Eureka로부터 ip 주소, 포트를 가져와 해당 서비스로 포워딩
+  - 그 외에도 간편하게 통합을 도와주는 장점이 있지 않을까 추측 중
