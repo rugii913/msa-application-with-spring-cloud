@@ -385,3 +385,17 @@
   - 예를 들어 예제에서 보았듯 같은 마이크로 서비스의 여러 인스턴스가 기동 중일 때 ip 주소, 포트를 명시할 필요 없이
     - 각 서비스가 시작할 때 Eureka에 등록하도록 하고, Spring Cloud Gateway는 Eureka로부터 ip 주소, 포트를 가져와 해당 서비스로 포워딩
   - 그 외에도 간편하게 통합을 도와주는 장점이 있지 않을까 추측 중
+
+## section 4. 예제 애플리케이션 전체 구성 개요
+- 서비스 로직보다는 Spring Cloud와 Spring Boot를 활용한 microservice들을 만드는 것에 집중
+- 전체 구성
+  - registry service: Eureka server, microservice 등록 및 검색
+  - routing service: API gateway server, microservice 부하 분산 및 서비스 라우팅
+  - configuration service: Config Server, 각 microservice가 가져야할 프로파일 정보, 설정 정보
+  - queuing system: Kafka 활용, microservice 간 메시지 발생 및 구독으로 데이터 동기화
+  - 도메인 관련 microservice 
+    - catalog-service: 상품 조회
+    - user-service: 사용자 조회, 인증, 주문 확인
+      - 클라이언트에서 주문 확인 요청 시 user-service는 order-service에 주문 조회 요청 
+    - order-service: 상품 주문
+      - 클라이언트에서 상품 주문 요청 시 order-service는 catalog-service에 상품 수량 업데이트 요청, 이 때 message queuing system 사용
