@@ -369,9 +369,19 @@
     - 앞서 작성했던 application.yml의 routes의 각 property와는 상당히 다름
     - predicates는 그대로 두되, uri 부분에는 ip 주소, port 정보가 들어가지 않고, lb://...과 같은 방식으로 작성
       - ... 부분에는 Eureka에 등록된 각 서비스의 이름을 작성
-      - `lb://` 는 naming service 안에 포함된 인스턴스 이름을 찾겠다는 기호로 보면 됨
+      - `lb://` 는 이름을 이용해 naming service 안에 포함된 인스턴스를 찾겠다는 기호로 보면 됨
+        - 정확하게는 load balancer를 가리키는 프로토콜
 - 서비스 실행 순서는 되도록 Eureka server 먼저 실행
-- 같은 서비스를 여러 인스턴스로 띄우고, gateway 동작 확인
+- 같은 서비스를 여러 인스턴스로 띄우고, gateway 동작 및 Eureka의 discovery, load balancing 동작 확인
   - server.port = 0으로 작성하여 랜덤 포트를 사용하도록 한 후 동작 확인
   - 환경 변수 정보 객체인 Environment를 주입 받은 후 API 호출 시 로그로 찍도록 하여 어떤 인스턴스가 호출됐는지 눈으로 확인해보기
   - round robin 방식으로 간단하게 로드 밸런싱 하고 있음을 확인할 수 있음
+
+### (개인적인 생각) Spring Cloud Gateway + Eureka를 사용하는 이유?
+- API gateway 기능이든, 요청 응답에 대한 필터링 기능이든, 로드 밸런싱 기능이든 모두
+  - Nginx와 같은 웹 서버 등 다른 손 쉽고 잘 알려진 도구를 이용해도 충분히 구현 가능
+- 그렇다면 Spring Cloud Gateway의 장점은?
+  - gateway와 service discovery 등이 다른 서비스들과 더 잘 상호작용하는 방식의 시스템을 구성할 수 있는 장점이 있지 않을까 생각
+  - 예를 들어 예제에서 보았듯 같은 마이크로 서비스의 여러 인스턴스가 기동 중일 때 ip 주소, 포트를 명시할 필요 없이
+    - 각 서비스가 시작할 때 Eureka에 등록하도록 하고, Spring Cloud Gateway는 Eureka로부터 ip 주소, 포트를 가져와 해당 서비스로 포워딩
+  - 그 외에도 간편하게 통합을 도와주는 장점이 있지 않을까 추측 중
