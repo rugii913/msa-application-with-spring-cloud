@@ -355,17 +355,23 @@
   - order가 Ordered.HIGHEST_PRECEDENCE로 지정된 경우, global filter보다 먼저 실행
   - Ordered.LOWEST_PRECEDENCE로 지정된 경우, 가장 마지막으로 실행
 
-### Spring Cloud Gateway - load balancer(Eureka 서비스와의 연동)
+### Spring Cloud Gateway - load balancer + Eureka server와의 연동
 - 지금까지 작성한 각 서비스들의 역할
   - Eureka server: 8761번 포트
     - service registration과 discovery 담당
-  - first-service, second-service: 각 서비스를 가정한 간단한 서비스, first-service는 8081번 포트, second-service는 8082번 포트
+  - first-service, second-service: 각 서비스를 가정한 간단한 서비스
+    - first-service는 8081번 포트, second-service는 8082번 포트 → 여러 인스턴스를 실행하는 상황을 가정하여 랜덤 포트 지정 방식으로 변경, server.port = 0으로 지정
   - API gateway: 8000번 포트
     - 클라이언트로부터의 요청을 앞에서 받고, Eureka를 통해 service를 discovery
     - 요청 API에 따라 Eureka에서 각 service를 발견해내고, 각 service로 포워딩
 - Eureka Server를 사용할 때의 API gateway의 property 작성
   - Eureka server를 naming server로 활용
     - 앞서 작성했던 application.yml의 routes의 각 property와는 상당히 다름
-    - predicates는 그대로 두되, uri 부분에는 ip 주소, port 정보가 들어가지 않고, lb//...과 같은 방식으로 작성
+    - predicates는 그대로 두되, uri 부분에는 ip 주소, port 정보가 들어가지 않고, lb://...과 같은 방식으로 작성
       - ... 부분에는 Eureka에 등록된 각 서비스의 이름을 작성
+      - `lb://` 는 naming service 안에 포함된 인스턴스 이름을 찾겠다는 기호로 보면 됨
 - 서비스 실행 순서는 되도록 Eureka server 먼저 실행
+- 같은 서비스를 여러 인스턴스로 띄우고, gateway 동작 확인
+  - server.port = 0으로 작성하여 랜덤 포트를 사용하도록 한 후 동작 확인
+  - 환경 변수 정보 객체인 Environment를 주입 받은 후 API 호출 시 로그로 찍도록 하여 어떤 인스턴스가 호출됐는지 눈으로 확인해보기
+  - round robin 방식으로 간단하게 로드 밸런싱 하고 있음을 확인할 수 있음
