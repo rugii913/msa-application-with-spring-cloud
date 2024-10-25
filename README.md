@@ -399,3 +399,13 @@
       - 클라이언트에서 주문 확인 요청 시 user-service는 order-service에 주문 조회 요청 
     - order-service: 상품 주문
       - 클라이언트에서 상품 주문 요청 시 order-service는 catalog-service에 상품 수량 업데이트 요청, 이 때 message queuing system 사용
+
+## section 5. Users Microservice 1
+- 1에서는 회원 가입, 회원 정보 확인, 전체 사용자 목록 조회 기능 구현 (cf. 2에서 로그인 기능 구현)
+  - 우선 5개 API 구현 → 사용자 정보 등록, 전체 사용자 조회, 사용자 정보 및 주문 내역 조회, 작동 상태 확인, 환영 메시지
+- 프로젝트 생성
+  - Spring Initialzr 종속성 Web, Eureka Discovery Client, H2, Lombok, (DevTools)
+  - main() 있는 클래스에 @EnableDiscoveryClient 붙임
+  - application.yml 설정 → port, eureka instanceId, eureka service url
+    - 추후 환경 변수 설정 및 h2 DB 설정 추가 
+  - Environment 혹은 @Value를 활용한 환경 변수 주입 받기 연습

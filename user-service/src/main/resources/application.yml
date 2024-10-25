@@ -4,6 +4,7 @@ server:
 spring:
   application:
     name: user-service
+
 eureka:
   client:
     register-with-eureka: true
@@ -11,4 +12,9 @@ eureka:
     service-url: # Eureka 서버의 위치를 지정
       defaultZone: http://127.0.0.1:8761/eureka # 이 endpoint에 microservice 정보를 등록할 것
   instance:
-    instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
+    # 같은 microservice가 여러 개 작동할 때도 각 인스턴스를 식별하기 위한 instance-id 부여
+    #instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}} #cf. ${spring.cloud.client.hostname}로 작성하면 IP 주소 활용
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+greeting:
+  message: Welcome to the simple e-commerce application!
