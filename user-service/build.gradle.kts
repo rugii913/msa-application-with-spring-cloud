@@ -32,6 +32,9 @@ dependencies {
     // spring-cloud-starter-netflix-eureka-client
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 
+    // h2
+    runtimeOnly("com.h2database:h2:2.2.224")
+
     // devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
