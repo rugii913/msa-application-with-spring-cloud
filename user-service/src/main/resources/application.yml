@@ -4,6 +4,17 @@ server:
 spring:
   application:
     name: user-service
+  datasource: # 강의에서는 이 datasource 설정을 하지 않음, H2 1.4 미만 버전에서 자동 설정으로 잡아주는 jdbc:h2:mem:testdb를 사용함
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:~/msa-example-user-service
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      #settings:
+        #web-allow-others: true # 강의와는 다르게 외부에서 접속할 일이 없다고 판단하여 주석 처리함
+      path: /h2-console # 명시하지 않아도 기본값 /h2-console
 
 eureka:
   client:

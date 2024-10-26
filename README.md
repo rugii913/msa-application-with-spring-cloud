@@ -409,3 +409,12 @@
   - application.yml 설정 → port, eureka instanceId, eureka service url
     - 추후 환경 변수 설정 및 h2 DB 설정 추가 
   - Environment 혹은 @Value를 활용한 환경 변수 주입 받기 연습
+- H2 embedded DB 사용(강의와 약간 다른 방식으로 진행)
+  - runtimeOnly로 h2 종속성 추가 
+  - 강의와 다르게 H2 1.4 이상 버전을 사용(2.2.224 버전)
+    - 사용자 경로(~)에 비어있는 msa-example-usr-service.mv.db 파일을 직접 만들고
+    - h2-console에서 jdbc:h2:~\msa-example-user-service로 접속
+  - 이 경우 자동으로 database 파일이 생성되지 않기 때문에 단순 embedded가 아닌 in-memory DB를 사용하기 까다로워짐
+    - H2를 실행하여 in-memory DB를 생성해주거나, JPA가 자동으로 DB를 생성해주도록 유도해줘야함
+    - 아직 JPA 종속성을 추가하지 않은 상황이므로, 직접 database 파일을 생성해주고 in-memory가 아닌 단순 embedded를 사용함
+
