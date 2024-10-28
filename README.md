@@ -418,3 +418,35 @@
     - H2를 실행하여 in-memory DB를 생성해주거나, JPA가 자동으로 DB를 생성해주도록 유도해줘야함
     - 아직 JPA 종속성을 추가하지 않은 상황이므로, 직접 database 파일을 생성해주고 in-memory가 아닌 단순 embedded를 사용함
 
+### user-service 사용자 추가 로직 작성
+- 강의 Users Microservice - 사용자 추가 ~ JPA ② 관련
+- 강의와 다르게 진행한 부분
+  - spring-boot-starter-validation 종속성 추가 - jakarta.validation-api 종속성만으로는 validation이 동작하지 않음
+    - controller에 누락된 jakarta.validation.Valid 어노테이션 추가
+  - application.yml에 jpa.hibernate.ddl-auto 설정 명시
+  - UserService 따로 interface를 만들지 않음
+  - 사용자 테이블 이름을 users가 아닌 service_user로 함
+  - request, response VO 및 DTO 클래스 이름을 다르게 함
+    - request용 DTO와 response용 DTO 분리
+  - 비밀번호를 나타내는 field 이름을 pwd가 아니라 password로 함
+  - UserEntity의 encryptedPassword를 unique key로 하지 않음
+  - modelmapper 라이브러리 사용하지 않음
+    - cf. modelmapper를 이용하여 객체 간 매핑하는 예시 코드
+      ```text
+      ... 기타 import 생략
+      import org.modelmapper.ModelMapper;
+      
+      class ... {
+        public UserDto createUser(UserDto userDto) {
+          ... 생략
+          ModelMapper mapper = new ModelMapper();
+          mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+          UserEntity userEntity = mapper.map(userDto, UserEntity.class);
+          userEntity.setEncryptedPassword("...");
+          ... 생략
+        }
+      }
+      ```
+  - modelmapper 라이브러리를 사용하지 않는 대신 DTO 쪽에 변환 로직을 만들어둠
+    - DTO, VO에 Lombok 어노테이션을 사용하지 않고 record class 활용
+    - 그 외 modelmapper 라이브러리를 사용하지 않는 대신 작성한 로직들 있음
