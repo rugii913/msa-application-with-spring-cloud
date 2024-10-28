@@ -450,3 +450,10 @@
   - modelmapper 라이브러리를 사용하지 않는 대신 DTO 쪽에 변환 로직을 만들어둠
     - DTO, VO에 Lombok 어노테이션을 사용하지 않고 record class 활용
     - 그 외 modelmapper 라이브러리를 사용하지 않는 대신 작성한 로직들 있음
+
+### Spring Security 연동
+- Spring Security 6.x부터 본격적으로 많은 변화가 있어, 강의보다는 최신화된 강의 예제 파일을 참고
+- 예제 파일과 다르게 진행한 부분
+  - password encoder 빈을 위한 config 파일은 별도로 분리
+  - FrameOptionsConfig.disable() 대신 sameOrigin() 사용
+  - csrf.disable() 대신 ignoringRequestMatchers() 사용

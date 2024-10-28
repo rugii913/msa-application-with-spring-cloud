@@ -29,11 +29,11 @@ public class UserEntity {
     @Column(nullable = false)
     public final LocalDateTime createdAt;
 
-    public UserEntity(String email, String name, String rawPassword) {
+    public UserEntity(String email, String name, String encryptedPassword) {
         this.email = email;
         this.name = name;
+        this.encryptedPassword = encryptedPassword;
 
-        this.encryptedPassword = rawPassword;
         this.userId = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
