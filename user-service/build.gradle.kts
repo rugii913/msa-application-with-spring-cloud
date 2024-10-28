@@ -46,6 +46,9 @@ dependencies {
     // h2
     runtimeOnly("com.h2database:h2:2.2.224")
 
+    // spring-boot-starter-security
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
     // devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
