@@ -31,7 +31,9 @@ public class UserController {
 
     @GetMapping("/health-check")
     public ResponseEntity<String> status() {
-        return ResponseEntity.ok("user-service works well");
+        return ResponseEntity.ok(
+                String.format("user-service works well on port %s", env.getProperty("local.server.port"))
+        );
     }
 
     @GetMapping("/welcome")

@@ -457,3 +457,13 @@
   - password encoder 빈을 위한 config 파일은 별도로 분리
   - FrameOptionsConfig.disable() 대신 sameOrigin() 사용
   - csrf.disable() 대신 ignoringRequestMatchers() 사용
+
+## section 6. Catalogs and Orders Microservice
+
+### Users Microservice와 Spring Cloud Gateway 연동 → 내용상 user-service 관련
+- apigateway-service의 application.yml에 user-service 쪽으로의 route 추가
+  - Spring Cloud gateway를 통한 user-service 호출이 가능한지 확인
+- 강의와 다르게 작성한 것
+  - 각 endpoint url에 직접 "user-service"를 붙이지 않고
+    - user-service의 application.yml에 server.servlet.context-path로 prefix를 일괄적으로 부여
+    - (참고) [기타 블로그 - \[Spring\] url prefix 설정](https://sirzzang.github.io/dev/Dev-spring-controller-prefix/)

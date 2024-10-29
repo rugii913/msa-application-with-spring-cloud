@@ -1,5 +1,7 @@
 server:
   port: 0 # Spring Boot의 random port 지원
+  servlet:
+    context-path: /user-service
 
 spring:
   application:

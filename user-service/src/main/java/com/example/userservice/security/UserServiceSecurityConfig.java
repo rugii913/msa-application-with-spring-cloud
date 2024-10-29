@@ -19,7 +19,9 @@ public class UserServiceSecurityConfig {
                 .authorizeHttpRequests(registry -> registry
                         .requestMatchers(
                                 new AntPathRequestMatcher("/users/**"),
-                                new AntPathRequestMatcher("/h2-console/**")
+                                new AntPathRequestMatcher("/h2-console/**"),
+                                new AntPathRequestMatcher("/health-check"),
+                                new AntPathRequestMatcher("/welcome")
                         ).permitAll()
                 )
                 .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)) // HeadersConfigurer.FrameOptionsConfig::disable
