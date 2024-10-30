@@ -467,3 +467,15 @@
   - 각 endpoint url에 직접 "user-service"를 붙이지 않고
     - user-service의 application.yml에 server.servlet.context-path로 prefix를 일괄적으로 부여
     - (참고) [기타 블로그 - \[Spring\] url prefix 설정](https://sirzzang.github.io/dev/Dev-spring-controller-prefix/)
+
+### Users Microservice - 사용자 조회
+- 전체 사용자 목록 가져오기, 개별 사용자 가져오기 API 개발
+  - 세부적인 코드는 강의 코드와 다르게 작성
+- cf. @JsonInclude(JsonInclude.Include.NON_NULL)
+  - null인 값인 경우 해당 field를 아예 넣지 않은 JSON을 만들어서 내보냄
+- cf. Spring Security 관련하여 강의와 별도로 확인한 것들
+  - csrfConfigurer.disable() 하지 않는 경우 GET 메서드 외 모든 메서드에 대해 CSRF를 신경써줘야 함 → 그렇지 않으면 403 Forbidden 응답
+  - "/error"를 추가하지 않는 경우, error 호출에 대한 권한이 없으므로, 원래 던져진 에러가 404든 500이든 상관 없이, 503 Forbidden만을 응답받게 됨
+  - permitAll 관련 읽어보기
+    - [기타 블로그 - \[Spring Security\] - SecurityConfig 클래스의 permitAll\(\) 이 적용되지 않았던 이유](https://velog.io/@choidongkuen/Spring-Security-SecurityConfig-클래스의-permitAll-이-적용되지-않았던-이유)
+    - [기타 블로그 - \[SpringBoot\] Spring Security Config에서 permitAll\(\)에 대한 진실과 오해](https://suhyeon-developer.tistory.com/42)

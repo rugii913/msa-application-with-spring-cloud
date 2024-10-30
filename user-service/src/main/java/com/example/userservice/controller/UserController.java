@@ -2,18 +2,19 @@ package com.example.userservice.controller;
 
 import com.example.userservice.dto.UserCreationRequestDto;
 import com.example.userservice.dto.UserCreationResponseDto;
+import com.example.userservice.dto.UserSearchResponseDto;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.Greeting;
 import com.example.userservice.vo.UserCreationRequest;
 import com.example.userservice.vo.UserCreationResponse;
+import com.example.userservice.vo.UserSearchResponse;
 import jakarta.validation.Valid;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 // @RequestMapping("/") // @RequestMapping("/")은 아무것도 적지 않은 것과 같음
 @RestController
@@ -57,5 +58,19 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(userCreationResponseDto.toUserCreationResponse());
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSearchResponse>> getUsers() {
+        return ResponseEntity.ok(
+                this.userService.getAllUsers().stream().map(UserSearchResponseDto::toUserSearchResponse).toList()
+        );
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<UserSearchResponse> getUser(@PathVariable String userId) {
+        return ResponseEntity.ok(
+                this.userService.getUserByUserId(userId).toUserSearchResponse()
+        );
     }
 }
