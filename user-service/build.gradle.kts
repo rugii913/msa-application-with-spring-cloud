@@ -26,11 +26,40 @@ repositories {
 extra["springCloudVersion"] = "2023.0.3"
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    // spring-cloud-starter-netflix-eureka-client
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
-    compileOnly("org.projectlombok:lombok")
+
+    // spring-boot-starter-web
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // spring-boot-starter-validation
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // jakarta validation-api
+    // jakarta.validation-api만으로는 validation이 동작하지 않고, hibernate-validator와 같은 구현체가 있어야 동작함에 유의
+    // 참고 - https://velog.io/@appti/Validator-학습-로그
+    // implementation("jakarta.validation:jakarta.validation-api")
+
+    // spring-boot-starter-data-jpa
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // h2
+    runtimeOnly("com.h2database:h2:2.2.224")
+
+    // spring-boot-starter-security
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // lombok
+    compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+
+    // modelmapper // 강의와 다르게 사용하지 않음 - 가장 최신 버전도 CVE vulnerability를 갖고 있기에 종속성에 추가하지 않았음
+    // implementation("org.modelmapper:modelmapper:3.2.1")
+
+    // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

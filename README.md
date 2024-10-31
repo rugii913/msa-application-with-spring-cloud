@@ -399,3 +399,83 @@
       - 클라이언트에서 주문 확인 요청 시 user-service는 order-service에 주문 조회 요청 
     - order-service: 상품 주문
       - 클라이언트에서 상품 주문 요청 시 order-service는 catalog-service에 상품 수량 업데이트 요청, 이 때 message queuing system 사용
+
+## section 5. Users Microservice 1
+- 1에서는 회원 가입, 회원 정보 확인, 전체 사용자 목록 조회 기능 구현 (cf. 2에서 로그인 기능 구현)
+  - 우선 5개 API 구현 → 사용자 정보 등록, 전체 사용자 조회, 사용자 정보 및 주문 내역 조회, 작동 상태 확인, 환영 메시지
+- 프로젝트 생성
+  - Spring Initialzr 종속성 Web, Eureka Discovery Client, H2, Lombok, (DevTools)
+  - main() 있는 클래스에 @EnableDiscoveryClient 붙임
+  - application.yml 설정 → port, eureka instanceId, eureka service url
+    - 추후 환경 변수 설정 및 h2 DB 설정 추가 
+  - Environment 혹은 @Value를 활용한 환경 변수 주입 받기 연습
+- H2 embedded DB 사용(강의와 약간 다른 방식으로 진행)
+  - runtimeOnly로 h2 종속성 추가 
+  - 강의와 다르게 H2 1.4 이상 버전을 사용(2.2.224 버전)
+    - 사용자 경로(~)에 비어있는 msa-example-usr-service.mv.db 파일을 직접 만들고
+    - h2-console에서 jdbc:h2:~\msa-example-user-service로 접속
+  - 이 경우 자동으로 database 파일이 생성되지 않기 때문에 단순 embedded가 아닌 in-memory DB를 사용하기 까다로워짐
+    - H2를 실행하여 in-memory DB를 생성해주거나, JPA가 자동으로 DB를 생성해주도록 유도해줘야함
+    - 아직 JPA 종속성을 추가하지 않은 상황이므로, 직접 database 파일을 생성해주고 in-memory가 아닌 단순 embedded를 사용함
+
+### user-service 사용자 추가 로직 작성
+- 강의 Users Microservice - 사용자 추가 ~ JPA ② 관련
+- 강의와 다르게 진행한 부분
+  - spring-boot-starter-validation 종속성 추가 - jakarta.validation-api 종속성만으로는 validation이 동작하지 않음
+    - controller에 누락된 jakarta.validation.Valid 어노테이션 추가
+  - application.yml에 jpa.hibernate.ddl-auto 설정 명시
+  - UserService 따로 interface를 만들지 않음
+  - 사용자 테이블 이름을 users가 아닌 service_user로 함
+  - request, response VO 및 DTO 클래스 이름을 다르게 함
+    - request용 DTO와 response용 DTO 분리
+  - 비밀번호를 나타내는 field 이름을 pwd가 아니라 password로 함
+  - UserEntity의 encryptedPassword를 unique key로 하지 않음
+  - modelmapper 라이브러리 사용하지 않음
+    - cf. modelmapper를 이용하여 객체 간 매핑하는 예시 코드
+      ```text
+      ... 기타 import 생략
+      import org.modelmapper.ModelMapper;
+      
+      class ... {
+        public UserDto createUser(UserDto userDto) {
+          ... 생략
+          ModelMapper mapper = new ModelMapper();
+          mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+          UserEntity userEntity = mapper.map(userDto, UserEntity.class);
+          userEntity.setEncryptedPassword("...");
+          ... 생략
+        }
+      }
+      ```
+  - modelmapper 라이브러리를 사용하지 않는 대신 DTO 쪽에 변환 로직을 만들어둠
+    - DTO, VO에 Lombok 어노테이션을 사용하지 않고 record class 활용
+    - 그 외 modelmapper 라이브러리를 사용하지 않는 대신 작성한 로직들 있음
+
+### Spring Security 연동
+- Spring Security 6.x부터 본격적으로 많은 변화가 있어, 강의보다는 최신화된 강의 예제 파일을 참고
+- 예제 파일과 다르게 진행한 부분
+  - password encoder 빈을 위한 config 파일은 별도로 분리
+  - FrameOptionsConfig.disable() 대신 sameOrigin() 사용
+  - csrf.disable() 대신 ignoringRequestMatchers() 사용
+
+## section 6. Catalogs and Orders Microservice
+
+### Users Microservice와 Spring Cloud Gateway 연동 → 내용상 user-service 관련
+- apigateway-service의 application.yml에 user-service 쪽으로의 route 추가
+  - Spring Cloud gateway를 통한 user-service 호출이 가능한지 확인
+- 강의와 다르게 작성한 것
+  - 각 endpoint url에 직접 "user-service"를 붙이지 않고
+    - user-service의 application.yml에 server.servlet.context-path로 prefix를 일괄적으로 부여
+    - (참고) [기타 블로그 - \[Spring\] url prefix 설정](https://sirzzang.github.io/dev/Dev-spring-controller-prefix/)
+
+### Users Microservice - 사용자 조회
+- 전체 사용자 목록 가져오기, 개별 사용자 가져오기 API 개발
+  - 세부적인 코드는 강의 코드와 다르게 작성
+- cf. @JsonInclude(JsonInclude.Include.NON_NULL)
+  - null인 값인 경우 해당 field를 아예 넣지 않은 JSON을 만들어서 내보냄
+- cf. Spring Security 관련하여 강의와 별도로 확인한 것들
+  - csrfConfigurer.disable() 하지 않는 경우 GET 메서드 외 모든 메서드에 대해 CSRF를 신경써줘야 함 → 그렇지 않으면 403 Forbidden 응답
+  - "/error"를 추가하지 않는 경우, error 호출에 대한 권한이 없으므로, 원래 던져진 에러가 404든 500이든 상관 없이, 503 Forbidden만을 응답받게 됨
+  - permitAll 관련 읽어보기
+    - [기타 블로그 - \[Spring Security\] - SecurityConfig 클래스의 permitAll\(\) 이 적용되지 않았던 이유](https://velog.io/@choidongkuen/Spring-Security-SecurityConfig-클래스의-permitAll-이-적용되지-않았던-이유)
+    - [기타 블로그 - \[SpringBoot\] Spring Security Config에서 permitAll\(\)에 대한 진실과 오해](https://suhyeon-developer.tistory.com/42)
