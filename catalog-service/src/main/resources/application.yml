@@ -1,0 +1,35 @@
+server:
+  port: 0
+  servlet:
+    context-path: /catalog-service
+
+spring:
+  application:
+    name: catalog-service
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:~/msa-example-catalog-service
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      # path: /h2-console # 명시하지 않아도 기본값 /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    # generate-ddl: true # 이 설정은 강의에서 잘못 설명한 것으로 보임, hibernate.ddl-auto 프로퍼티를 지정해두었다면 불필요한 듯함
+    defer-datasource-initialization: true # (강의에는 명시되어 있지 않음) Hibernate 초기화 이후 SQL 스크립트 실행하도록 함
+  devtools:
+    livereload:
+      enabled: false # 필요할 때만 켜두기 위해 false로 설정
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true # Eureka 서버로부터 인스턴스들의 정보를 주기적으로 받음
+    service-url: # Eureka 서버의 위치를 지정
+      defaultZone: http://127.0.0.1:8761/eureka # 이 endpoint에 microservice 정보를 등록할 것
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
