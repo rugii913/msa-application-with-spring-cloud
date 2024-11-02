@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Service
 public class UserService {
@@ -42,9 +41,8 @@ public class UserService {
     }
 
     public List<UserSearchServiceReturnDto> getAllUsers() {
-        Iterable<UserEntity> users = userRepository.findAll();
+        List<UserEntity> users = userRepository.findAll();
 
-        return StreamSupport.stream(users.spliterator(), false)
-                .map(user -> UserSearchServiceReturnDto.of(user, Collections.emptyList())).toList();
+        return users.stream().map(user -> UserSearchServiceReturnDto.of(user, Collections.emptyList())).toList();
     }
 }
