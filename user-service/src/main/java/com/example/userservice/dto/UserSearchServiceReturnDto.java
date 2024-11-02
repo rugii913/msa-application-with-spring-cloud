@@ -1,7 +1,6 @@
 package com.example.userservice.dto;
 
 import com.example.userservice.jpa.UserEntity;
-import com.example.userservice.vo.OrderResponse;
 
 import java.util.List;
 
@@ -9,10 +8,10 @@ public record UserSearchServiceReturnDto(
         String email,
         String name,
         String userId,
-        List<OrderResponse> orders
+        List<OrderDto> orders
 ) {
 
-    public static UserSearchServiceReturnDto of(UserEntity userEntity, List<OrderResponse> orders) {
+    public static UserSearchServiceReturnDto of(UserEntity userEntity, List<OrderDto> orders) {
         return new UserSearchServiceReturnDto(userEntity.email, userEntity.name, userEntity.userId, orders);
     }
 

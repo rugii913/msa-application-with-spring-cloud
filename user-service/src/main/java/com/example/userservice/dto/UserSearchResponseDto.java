@@ -1,6 +1,5 @@
 package com.example.userservice.dto;
 
-import com.example.userservice.vo.OrderResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
@@ -10,5 +9,5 @@ public record UserSearchResponseDto(
         String email,
         String name,
         String userId,
-        List<OrderResponse> orders
+        List<OrderDto> orders
 ) {}
