@@ -1,19 +1,14 @@
 package com.example.userservice.dto;
 
-import com.example.userservice.jpa.UserEntity;
-import com.example.userservice.vo.UserCreationRequest;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record UserCreationRequestDto(
+        @NotNull(message = "Email cannot be null.") @Size(min = 2, message = "Email should be more than 1 characters.") @Email
         String email,
+        @NotNull(message = "Name cannot be null.") @Size(min = 2, message = "Name should be more than 1 characters.")
         String name,
+        @NotNull(message = "Password cannot be null.") @Size(min = 8, message = "Password should be more than 7 characters.")
         String password
-) {
-
-    public static UserCreationRequestDto from(UserCreationRequest userAdditionRequest) {
-        return new UserCreationRequestDto(userAdditionRequest.email(), userAdditionRequest.name(), userAdditionRequest.password());
-    }
-
-    public UserEntity toEntity() {
-        return new UserEntity(email, name, password);
-    }
-}
+) {}

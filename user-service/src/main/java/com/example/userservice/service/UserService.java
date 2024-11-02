@@ -1,8 +1,8 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserCreationRequestDto;
-import com.example.userservice.dto.UserCreationResponseDto;
-import com.example.userservice.dto.UserSearchResponseDto;
+import com.example.userservice.dto.UserCreationServiceParameterDto;
+import com.example.userservice.dto.UserCreationServiceReturnDto;
+import com.example.userservice.dto.UserSearchServiceReturnDto;
 import com.example.userservice.jpa.UserEntity;
 import com.example.userservice.jpa.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,7 +23,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserCreationResponseDto createUser(UserCreationRequestDto userCreationRequestDto) {
+    public UserCreationServiceReturnDto createUser(UserCreationServiceParameterDto userCreationRequestDto) {
         UserEntity userEntity = userRepository.save(
                 new UserEntity(
                         userCreationRequestDto.email(),
@@ -31,20 +31,20 @@ public class UserService {
                         passwordEncoder.encode(userCreationRequestDto.password())
                 )
         );
-        return UserCreationResponseDto.from(userEntity);
+        return UserCreationServiceReturnDto.from(userEntity);
     }
 
-    public UserSearchResponseDto getUserByUserId(String userId) {
+    public UserSearchServiceReturnDto getUserByUserId(String userId) {
         UserEntity user = userRepository.findByUserId(userId);
         if (user == null) throw new RuntimeException("User not found");
 
-        return UserSearchResponseDto.of(user, Collections.emptyList());
+        return UserSearchServiceReturnDto.of(user, Collections.emptyList());
     }
 
-    public List<UserSearchResponseDto> getAllUsers() {
+    public List<UserSearchServiceReturnDto> getAllUsers() {
         Iterable<UserEntity> users = userRepository.findAll();
 
         return StreamSupport.stream(users.spliterator(), false)
-                .map(user -> UserSearchResponseDto.of(user, Collections.emptyList())).toList();
+                .map(user -> UserSearchServiceReturnDto.of(user, Collections.emptyList())).toList();
     }
 }
