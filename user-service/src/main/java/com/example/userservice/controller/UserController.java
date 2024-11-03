@@ -46,11 +46,11 @@ public class UserController {
 
     @PostMapping("/users")
     public ResponseEntity<UserCreationResponseDto> createUser(@Valid @RequestBody UserCreationRequestDto requestDto) {
-        UserCreationServiceResponseDto userCreationServiceResponseDto = userService.createUser(UserCreationServiceRequestDto.from(requestDto));
+        UserCreationResponseDto userCreationResponseDto = userService.createUser(UserCreationServiceRequestDto.from(requestDto));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userCreationServiceResponseDto.toUserCreationResponseDto());
+                .body(userCreationResponseDto);
     }
 
     @GetMapping("/users")

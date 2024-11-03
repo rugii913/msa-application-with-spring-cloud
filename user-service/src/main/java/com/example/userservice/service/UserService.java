@@ -20,7 +20,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserCreationServiceResponseDto createUser(UserCreationServiceRequestDto requestDto) {
+    public UserCreationResponseDto createUser(UserCreationServiceRequestDto requestDto) {
         UserEntity userEntity = userRepository.save(
                 new UserEntity(
                         requestDto.email(),
@@ -29,7 +29,7 @@ public class UserService {
                         passwordEncoder
                 )
         );
-        return UserCreationServiceResponseDto.from(userEntity);
+        return UserCreationResponseDto.from(userEntity);
     }
 
     public UserSearchServiceResponseDto findUser(String userId) {
