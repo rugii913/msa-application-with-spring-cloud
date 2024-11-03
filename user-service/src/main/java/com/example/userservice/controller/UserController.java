@@ -1,20 +1,13 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.UserCreationRequestDto;
-import com.example.userservice.dto.UserCreationResponseDto;
-import com.example.userservice.dto.UserSearchResponseDto;
+import com.example.userservice.dto.*;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.Greeting;
-import com.example.userservice.vo.UserCreationRequest;
-import com.example.userservice.vo.UserCreationResponse;
-import com.example.userservice.vo.UserSearchResponse;
 import jakarta.validation.Valid;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 // @RequestMapping("/") // @RequestMapping("/")은 아무것도 적지 않은 것과 같음
 @RestController
@@ -52,25 +45,25 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserCreationResponse> createUser(@Valid @RequestBody UserCreationRequest userCreationRequest) {
-        UserCreationResponseDto userCreationResponseDto = userService.createUser(UserCreationRequestDto.from(userCreationRequest));
+    public ResponseEntity<UserCreationResponseDto> createUser(@Valid @RequestBody UserCreationRequestDto requestDto) {
+        UserCreationResponseDto userCreationResponseDto = userService.createUser(UserCreationServiceRequestDto.from(requestDto));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userCreationResponseDto.toUserCreationResponse());
+                .body(userCreationResponseDto);
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserSearchResponse>> getUsers() {
+    public ResponseEntity<UserListResponseDto> findAllUsers() {
         return ResponseEntity.ok(
-                this.userService.getAllUsers().stream().map(UserSearchResponseDto::toUserSearchResponse).toList()
+                this.userService.findAllUsers()
         );
     }
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<UserSearchResponse> getUser(@PathVariable String userId) {
+    public ResponseEntity<UserSearchResponseDto> findUser(@PathVariable String userId) {
         return ResponseEntity.ok(
-                this.userService.getUserByUserId(userId).toUserSearchResponse()
+                this.userService.findUser(userId).toUserSearchResponseDto()
         );
     }
 }
