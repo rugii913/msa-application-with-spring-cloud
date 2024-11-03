@@ -2,6 +2,7 @@ package com.example.userservice.jpa;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -29,10 +30,10 @@ public class UserEntity {
     @Column(nullable = false)
     public final LocalDateTime createdAt;
 
-    public UserEntity(String email, String name, String encryptedPassword) {
+    public UserEntity(String email, String name, String rawPassword, PasswordEncoder passwordEncoder) {
         this.email = email;
         this.name = name;
-        this.encryptedPassword = encryptedPassword;
+        this.encryptedPassword = passwordEncoder.encode(rawPassword);
 
         this.userId = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
