@@ -487,4 +487,42 @@
 - presentation layer의 DTO와 business layer의 DTO 클래스가 분리되도록 하였으나,
   - 크게 실익이 없는 경우에는 별도로 나누지 않고 presentation layer의 DTO를 그대로 사용
   - ex. 요청 시의 DTO는 의존성이 다른 부분이 있다고 판단하여 분리된 채로 두고, 응답 시의 DTO는 의존성이 거의 다르지 않을 거라 판단하여 분리되지 않게 함
-- 비밀번호 encode 작업을 entity 생성자 로직에서 진행 → 이 부분은 더 고민이 필요 
+- 비밀번호 encode 작업을 entity 생성자 로직에서 진행 → 이 부분은 더 고민이 필요
+- DTO 분리 관련 더 생각해볼 것
+  - [인프런 강의 질문 - controller, service용 dto를 분리시키는 것에 대한 질문](https://www.inflearn.com/community/questions/944019) 
+  - [기타 블로그 - Presentation - Business DTO를 분리시켜라](https://m-falcon.tistory.com/711)
+    - 각 layer에서의 DTO 분리가 오버 엔지니어링이 되지 않을지 유의
+
+### Catalogs Microservice - 개요 및 기능 구현
+- 전체 카탈로그(상품 목록) 조회 API 개발
+- 종속성 관련 user-service와 거의 유사하게 추가
+  - spring-cloud-starter-netflix-eureka-client
+  - spring-boot-starter-web
+  - spring-boot-starter-validation → 추가하긴 했으나 현재 사용하지 않음
+  - spring-boot-starter-data-jpa
+  - h2 → 강의와 달리 1.4.x 이상 버전 사용함
+  - devtools → 종속성으로 추가는 해두었으나 spring.devtools.livereload.enabled=false로 해둠
+  - lombok
+  - cf. Spring Security는 종속성으로 추가하지 않았음
+- data.sql 및 application.yml의 프로퍼티 사용하여 애플리케이션 시작 시 데이터를 추가하게 하였음
+  - 테스트를 용이하게 하기 위함
+  - data.sql에 DML 작성
+  - application.yml 설정
+    - spring.jpa.defer-datasource-initialization=true → 강의 영상에 명시되어 있지 않으나 Hibernate 초기화된 이후에 SQL 스크립트가 실행되도록 하려면 필요
+      - cf. Catalogs Microservice - 기능 구현 ① 강의 자료에 관련 내용 적혀 있음
+      - 참고 자료
+        - [기타 블로그 - data.sql이 동작하지 않을 때, 의심해봐야 할 것](https://devvkkid.tistory.com/262)
+        - [기타 블로그 - Spring Boot/어플리케이션 실행할때 JPA 스키마 생성 및 ddl, dml sql 실행](https://dchkang83.tistory.com/43)
+    - spring.jpa.generate-ddl은 강의에서 명시했으나 불필요
+      - 참고 자료
+        - [기타 블로그 - \[Spring Data JPA\] jpa.generate-ddl과 jpa.hibernate.ddl-auto 프로퍼티](https://sechoi.tistory.com/28)
+        - [기타 블로그 - JPA 애플리케이션 데이터베이스 초기화](https://yeoon.tistory.com/132)
+        - [기타 블로그 - Spring Boot 초기 데이터 설정 방법 정리\(data.sql, schema.sql\)](https://wildeveloperetrain.tistory.com/228)
+        - [기타 블로그 - Spring에서 JPA / Hibernate 초기화 전략](https://pravusid.kr/java/2018/10/10/spring-database-initialization.html)
+    - spring.sql.init.mode=always → 강의에 명시되어 있지 않으나 data.sql DML을 실행하기 위해 필요한 설정
+- 강의와 다르게 작성한 것
+  - 엔티티의 접근 제어자 및 생성자
+  - DTO 클래스명
+  - 강의에서 작성한 CatalogDto 클래스는 현재 사용하지 않으므로 추가하지 않았음
+    - 필요 시 Catalogs Microservice - 기능 구현 ① 강의 14:10 부분 참고하여 작성
+  - DB 초기화를 위한 DDL, DML 관련 application.yml 설정 
