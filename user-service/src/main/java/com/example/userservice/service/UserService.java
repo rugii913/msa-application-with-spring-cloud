@@ -1,8 +1,8 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserCreationServiceParameterDto;
-import com.example.userservice.dto.UserCreationServiceReturnDto;
-import com.example.userservice.dto.UserSearchServiceReturnDto;
+import com.example.userservice.dto.UserCreationServiceRequestDto;
+import com.example.userservice.dto.UserCreationServiceResponseDto;
+import com.example.userservice.dto.UserSearchServiceResponseDto;
 import com.example.userservice.jpa.UserEntity;
 import com.example.userservice.jpa.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,27 +22,27 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserCreationServiceReturnDto createUser(UserCreationServiceParameterDto userCreationRequestDto) {
+    public UserCreationServiceResponseDto createUser(UserCreationServiceRequestDto requestDto) {
         UserEntity userEntity = userRepository.save(
                 new UserEntity(
-                        userCreationRequestDto.email(),
-                        userCreationRequestDto.name(),
-                        passwordEncoder.encode(userCreationRequestDto.password())
+                        requestDto.email(),
+                        requestDto.name(),
+                        passwordEncoder.encode(requestDto.password())
                 )
         );
-        return UserCreationServiceReturnDto.from(userEntity);
+        return UserCreationServiceResponseDto.from(userEntity);
     }
 
-    public UserSearchServiceReturnDto getUserByUserId(String userId) {
+    public UserSearchServiceResponseDto getUserByUserId(String userId) {
         UserEntity user = userRepository.findByUserId(userId);
         if (user == null) throw new RuntimeException("User not found");
 
-        return UserSearchServiceReturnDto.of(user, Collections.emptyList());
+        return UserSearchServiceResponseDto.of(user, Collections.emptyList());
     }
 
-    public List<UserSearchServiceReturnDto> getAllUsers() {
+    public List<UserSearchServiceResponseDto> getAllUsers() {
         List<UserEntity> users = userRepository.findAll();
 
-        return users.stream().map(user -> UserSearchServiceReturnDto.of(user, Collections.emptyList())).toList();
+        return users.stream().map(user -> UserSearchServiceResponseDto.of(user, Collections.emptyList())).toList();
     }
 }

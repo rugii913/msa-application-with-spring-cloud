@@ -4,18 +4,18 @@ import com.example.userservice.jpa.UserEntity;
 
 import java.util.List;
 
-public record UserSearchServiceReturnDto(
+public record UserSearchServiceResponseDto(
         String email,
         String name,
         String userId,
         List<OrderDto> orders
 ) {
 
-    public static UserSearchServiceReturnDto of(UserEntity userEntity, List<OrderDto> orders) {
-        return new UserSearchServiceReturnDto(userEntity.email, userEntity.name, userEntity.userId, orders);
+    public static UserSearchServiceResponseDto of(UserEntity userEntity, List<OrderDto> orders) {
+        return new UserSearchServiceResponseDto(userEntity.email, userEntity.name, userEntity.userId, orders);
     }
 
-    public UserSearchResponseDto toUserSearchResponse() {
+    public UserSearchResponseDto toUserSearchResponseDto() {
         return new UserSearchResponseDto(this.email, this.name, this.userId, this.orders);
     }
 }

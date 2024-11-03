@@ -1,8 +1,8 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.UserCreationServiceParameterDto;
-import com.example.userservice.dto.UserCreationServiceReturnDto;
-import com.example.userservice.dto.UserSearchServiceReturnDto;
+import com.example.userservice.dto.UserCreationServiceRequestDto;
+import com.example.userservice.dto.UserCreationServiceResponseDto;
+import com.example.userservice.dto.UserSearchServiceResponseDto;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.Greeting;
 import com.example.userservice.dto.UserCreationRequestDto;
@@ -52,25 +52,25 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserCreationResponseDto> createUser(@Valid @RequestBody UserCreationRequestDto userCreationRequest) {
-        UserCreationServiceReturnDto userCreationResponseDto = userService.createUser(UserCreationServiceParameterDto.from(userCreationRequest));
+    public ResponseEntity<UserCreationResponseDto> createUser(@Valid @RequestBody UserCreationRequestDto requestDto) {
+        UserCreationServiceResponseDto userCreationServiceResponseDto = userService.createUser(UserCreationServiceRequestDto.from(requestDto));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(userCreationResponseDto.toUserCreationResponse());
+                .body(userCreationServiceResponseDto.toUserCreationResponseDto());
     }
 
     @GetMapping("/users")
     public ResponseEntity<List<UserSearchResponseDto>> getUsers() {
         return ResponseEntity.ok(
-                this.userService.getAllUsers().stream().map(UserSearchServiceReturnDto::toUserSearchResponse).toList()
+                this.userService.getAllUsers().stream().map(UserSearchServiceResponseDto::toUserSearchResponseDto).toList()
         );
     }
 
     @GetMapping("/users/{userId}")
     public ResponseEntity<UserSearchResponseDto> getUser(@PathVariable String userId) {
         return ResponseEntity.ok(
-                this.userService.getUserByUserId(userId).toUserSearchResponse()
+                this.userService.getUserByUserId(userId).toUserSearchResponseDto()
         );
     }
 }
