@@ -479,3 +479,12 @@
   - permitAll 관련 읽어보기
     - [기타 블로그 - \[Spring Security\] - SecurityConfig 클래스의 permitAll\(\) 이 적용되지 않았던 이유](https://velog.io/@choidongkuen/Spring-Security-SecurityConfig-클래스의-permitAll-이-적용되지-않았던-이유)
     - [기타 블로그 - \[SpringBoot\] Spring Security Config에서 permitAll\(\)에 대한 진실과 오해](https://suhyeon-developer.tistory.com/42)
+
+### \(별도 진행\) user-service 리팩토링
+- 강의에서 작성한 클래스 코드에서 납득되지 않는 부분이 있기에 리팩토링 진행
+- XxxRequest, XxxResponse는 VO 성격이 아니라고 판단하여 dto 패키지로 변경
+- UserRepository가 CrudRepository가 아닌 ListCrudRepository를 상속하도록 변경
+- presentation layer의 DTO와 business layer의 DTO 클래스가 분리되도록 하였으나,
+  - 크게 실익이 없는 경우에는 별도로 나누지 않고 presentation layer의 DTO를 그대로 사용
+  - ex. 요청 시의 DTO는 의존성이 다른 부분이 있다고 판단하여 분리된 채로 두고, 응답 시의 DTO는 의존성이 거의 다르지 않을 거라 판단하여 분리되지 않게 함
+- 비밀번호 encode 작업을 entity 생성자 로직에서 진행 → 이 부분은 더 고민이 필요 
