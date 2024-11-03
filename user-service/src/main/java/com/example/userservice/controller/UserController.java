@@ -1,20 +1,13 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.UserCreationServiceRequestDto;
-import com.example.userservice.dto.UserCreationServiceResponseDto;
-import com.example.userservice.dto.UserSearchServiceResponseDto;
+import com.example.userservice.dto.*;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.Greeting;
-import com.example.userservice.dto.UserCreationRequestDto;
-import com.example.userservice.dto.UserCreationResponseDto;
-import com.example.userservice.dto.UserSearchResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 // @RequestMapping("/") // @RequestMapping("/")은 아무것도 적지 않은 것과 같음
 @RestController
@@ -61,16 +54,16 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserSearchResponseDto>> getUsers() {
+    public ResponseEntity<UserListResponseDto> findAllUsers() {
         return ResponseEntity.ok(
-                this.userService.getAllUsers().stream().map(UserSearchServiceResponseDto::toUserSearchResponseDto).toList()
+                this.userService.findAllUsers()
         );
     }
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<UserSearchResponseDto> getUser(@PathVariable String userId) {
+    public ResponseEntity<UserSearchResponseDto> findUser(@PathVariable String userId) {
         return ResponseEntity.ok(
-                this.userService.getUserByUserId(userId).toUserSearchResponseDto()
+                this.userService.findUser(userId).toUserSearchResponseDto()
         );
     }
 }

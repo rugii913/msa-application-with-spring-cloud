@@ -1,8 +1,6 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserCreationServiceRequestDto;
-import com.example.userservice.dto.UserCreationServiceResponseDto;
-import com.example.userservice.dto.UserSearchServiceResponseDto;
+import com.example.userservice.dto.*;
 import com.example.userservice.jpa.UserEntity;
 import com.example.userservice.jpa.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,16 +32,16 @@ public class UserService {
         return UserCreationServiceResponseDto.from(userEntity);
     }
 
-    public UserSearchServiceResponseDto getUserByUserId(String userId) {
-        UserEntity user = userRepository.findByUserId(userId);
-        if (user == null) throw new RuntimeException("User not found");
+    public UserSearchServiceResponseDto findUser(String userId) {
+        UserEntity foundUser = userRepository.findByUserId(userId);
+        if (foundUser == null) throw new RuntimeException("User not found");
 
-        return UserSearchServiceResponseDto.of(user, Collections.emptyList());
+        return UserSearchServiceResponseDto.of(foundUser, Collections.emptyList());
     }
 
-    public List<UserSearchServiceResponseDto> getAllUsers() {
+    public UserListResponseDto findAllUsers() {
         List<UserEntity> users = userRepository.findAll();
 
-        return users.stream().map(user -> UserSearchServiceResponseDto.of(user, Collections.emptyList())).toList();
+        return new UserListResponseDto(users.stream().map(UserListItemDto::from).toList());
     }
 }
