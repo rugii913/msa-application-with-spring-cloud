@@ -8,5 +8,6 @@ include(
     "first-service",
     "second-service",
     "user-service",
-    "catalog-service"
+    "catalog-service",
+    "order-service"
 )

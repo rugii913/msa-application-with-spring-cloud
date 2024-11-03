@@ -525,4 +525,9 @@
   - DTO 클래스명
   - 강의에서 작성한 CatalogDto 클래스는 현재 사용하지 않으므로 추가하지 않았음
     - 필요 시 Catalogs Microservice - 기능 구현 ① 강의 14:10 부분 참고하여 작성
-  - DB 초기화를 위한 DDL, DML 관련 application.yml 설정 
+  - DB 초기화를 위한 DDL, DML 관련 application.yml 설정
+
+### Orders Microservice - 개요 및 기능 구현
+- ?????????????? API 개발
+- 종속성 관련 catalog-service 똑같이 추가
+- 초기 데이터는 넣지 않는 것으로 하여 application.yml에서 DDL 설정은 제외함
