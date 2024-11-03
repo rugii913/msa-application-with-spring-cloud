@@ -21,6 +21,10 @@ spring:
     show-sql: true
     # generate-ddl: true # 이 설정은 강의에서 잘못 설명한 것으로 보임, hibernate.ddl-auto 프로퍼티를 지정해두었다면 불필요한 듯함
     defer-datasource-initialization: true # (강의에는 명시되어 있지 않음) Hibernate 초기화 이후 SQL 스크립트 실행하도록 함
+  sql: # 강의에서는 적지 않았지만, 현재 sql.init.mode=always를 명시하지 않으면 data.sql의 데이터를 넣어주지 않음
+    init:
+      mode: always
+      # data-locations: classpath:data.sql # cf. 없어도 동작
   devtools:
     livereload:
       enabled: false # 필요할 때만 켜두기 위해 false로 설정
