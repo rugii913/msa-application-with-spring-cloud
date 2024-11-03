@@ -27,7 +27,8 @@ public class UserService {
                 new UserEntity(
                         requestDto.email(),
                         requestDto.name(),
-                        passwordEncoder.encode(requestDto.password())
+                        requestDto.password(),
+                        passwordEncoder
                 )
         );
         return UserCreationServiceResponseDto.from(userEntity);

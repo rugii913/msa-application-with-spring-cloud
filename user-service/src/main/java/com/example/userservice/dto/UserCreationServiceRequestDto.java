@@ -15,8 +15,4 @@ public record UserCreationServiceRequestDto(
                 userCreationRequestDto.password()
         );
     }
-
-    public UserEntity toEntity() {
-        return new UserEntity(email, name, password);
-    }
 }
