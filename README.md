@@ -543,3 +543,8 @@
   - 예를 들어 Product entity의 product_id가 CATALOG-001 ~ 003까지 있을 때
   - product_id가 CATALOG-009인 OrderEntity를 생성해도 오류가 발생하지 않음
   - 하지만 MSA에서 데이터 무결성은 JPA의 연관 관계를 맺는 방식으로 지키는 것이 아니라고 함
+- (별도 진행) cf. order entity를 save()한 뒤 return 객체의 createdAt 필드가 null인 문제 상황
+  - Hibernate의 @ColumnDefault(value = "CURRENT_TIMESTAMP")를 사용할 경우, return 객체의 createdAt을 DB의 값대로 반영하려면
+    - entityManager.refresh(savedEntity)와 비슷한 방식으로 해당 entity에 대해 refresh가 필요함
+  - 불가피한 경우가 아니라면 Hibernate의 @CreationTimestamp를 이용하여 생성 시의 시간을 기록할 수 있음
+    - default가 있는 DB column의 created_at 값을 반영하는 대신 @CreationTimestamp을 사용하여 서버에서 시간을 기록하게 하는 것 

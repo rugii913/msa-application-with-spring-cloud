@@ -2,7 +2,7 @@ package com.example.orderservice.jpa;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -34,8 +34,8 @@ public class OrderEntity {
     @Column(nullable = false)
     public final String userId;
 
-    @Column(nullable = false, updatable = false, insertable = false)
-    @ColumnDefault(value = "CURRENT_TIMESTAMP")
+    @Column(nullable = false, updatable = false) // cf. insertable = false element 추가할 경우 INSERT 문에서 해당 컬럼을 제외한다고 함
+    @CreationTimestamp // cf. @ColumnDefault(value = "CURRENT_TIMESTAMP")를 사용할 경우, 저장된 entity의 createdAt의 DB 값을 반영하기 위해선 entity manager를 이용한 refresh 필요
     LocalDateTime createdAt;
 
     public OrderEntity(String productId, int quantity, int unitPrice, String userId) {
