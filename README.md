@@ -526,8 +526,20 @@
   - 강의에서 작성한 CatalogDto 클래스는 현재 사용하지 않으므로 추가하지 않았음
     - 필요 시 Catalogs Microservice - 기능 구현 ① 강의 14:10 부분 참고하여 작성
   - DB 초기화를 위한 DDL, DML 관련 application.yml 설정
-
+  - DTO, Entity 클래스 작성 시 Serializable 구현 생략
+    - 현재 당장은 Serializable를 구현하게 할 필요는 없다고 판단함
+  
 ### Orders Microservice - 개요 및 기능 구현
-- ?????????????? API 개발
-- 종속성 관련 catalog-service 똑같이 추가
-- 초기 데이터는 넣지 않는 것으로 하여 application.yml에서 DDL 설정은 제외함
+- 주문 생성, 주문 조회, 특정 회원 전체 주문 조회 API 개발
+- 종속성 및 설정
+  - 종속성 관련 catalog-service 똑같이 추가
+  - 초기 데이터는 넣지 않는 것으로 하여 application.yml에서 DDL 설정은 제외함
+- 코드는 user-service, catalog-service와 유사하게 작성 
+- 강의와 다르게 작성한 것
+  - catalog-service와 유사, 납득이 안 되는 부분은 강의와 다르게 작성함
+- cf. order는 H2 DBMS에서 예약어이므로 테이블 이름을 product_order로 정함 
+- cf. 데이터 무결성 관련
+  - entity 간의 연관 관계가 없으므로, 통상적으로 JPA를 사용하는 방식으로는 데이터의 무결성이 지켜지지 않음
+  - 예를 들어 Product entity의 product_id가 CATALOG-001 ~ 003까지 있을 때
+  - product_id가 CATALOG-009인 OrderEntity를 생성해도 오류가 발생하지 않음
+  - 하지만 MSA에서 데이터 무결성은 JPA의 연관 관계를 맺는 방식으로 지키는 것이 아니라고 함
