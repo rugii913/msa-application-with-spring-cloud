@@ -25,6 +25,14 @@ spring:
           uri: lb://USER-SERVICE
           predicates:
             - Path=/user-service/**
+        - id: catalog-service
+          uri: lb://CATALOG-SERVICE
+          predicates:
+            - Path=/catalog-service/**
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order-service/**
         - id: first-service
           # uri: http://localhost:8081 # 이동될 주소 직접 지정한 경우
           uri: lb://MY-FIRST-SERVICE # Eureka server에 등록된 service 이름을 이용해 포워딩할 주소를 받아옴 - 통상적으로 해당 서비스 프로젝트의 application.yml 파일의 spring.application.name 프로퍼티 값(모두 대문자로 바뀜)으로 등록됨
