@@ -400,7 +400,7 @@
     - order-service: 상품 주문
       - 클라이언트에서 상품 주문 요청 시 order-service는 catalog-service에 상품 수량 업데이트 요청, 이 때 message queuing system 사용
 
-## section 5. Users Microservice 1
+## section 5. Users Microservice ①
 - 1에서는 회원 가입, 회원 정보 확인, 전체 사용자 목록 조회 기능 구현 (cf. 2에서 로그인 기능 구현)
   - 우선 5개 API 구현 → 사용자 정보 등록, 전체 사용자 조회, 사용자 정보 및 주문 내역 조회, 작동 상태 확인, 환영 메시지
 - 프로젝트 생성
@@ -547,4 +547,72 @@
   - Hibernate의 @ColumnDefault(value = "CURRENT_TIMESTAMP")를 사용할 경우, return 객체의 createdAt을 DB의 값대로 반영하려면
     - entityManager.refresh(savedEntity)와 비슷한 방식으로 해당 entity에 대해 refresh가 필요함
   - 불가피한 경우가 아니라면 Hibernate의 @CreationTimestamp를 이용하여 생성 시의 시간을 기록할 수 있음
-    - default가 있는 DB column의 created_at 값을 반영하는 대신 @CreationTimestamp을 사용하여 서버에서 시간을 기록하게 하는 것 
+    - default가 있는 DB column의 created_at 값을 반영하는 대신 @CreationTimestamp을 사용하여 서버에서 시간을 기록하게 하는 것
+
+## section 7. Users Microservice ②
+- JWT, API gateway의 AuthorizationHeaderFilter를 이용한 로그인 기능
+
+### Users Microservice - AuthenticationFilter 추가, loadUserByUsername() 구현
+- Spring Security에 많은 변화가 있었기 때문에 강의 영상보다는 새로운 예제 코드 및 기타 문서들을 참고하여 작성
+
+#### CustomAuthenticationFilter 및 AuthenticationService 추가 등
+- CustomAuthenticationFilter 작성
+  - 관련하여 로그인 시 사용자 인증 정보를 담을 LoginRequest 작성
+    - HttpServletRequest 객체에서 getInputStream()으로 읽어낸 body를 jackson ObjectMapper로 매핑
+  - UsernamePasswordAuthenticationFilter의 두 메서드 구현
+    - attemptAuthentication()
+      - UsernamePasswordAuthenticationFilter의 필드인 AuthenticationManager 객체의 authenticate()를 호출하여 인증을 위임
+      - AuthenticationManager 객체는 SecurityFilterChain 객체를 반환하는 security 설정 메서드에서 지정해둠
+    - successfulAuthentication()
+      - 로그인 성공 시의 로직이 들어갈 부분 - 아직 로직을 상세히 작성하지는 않음
+- AuthenticationService 작성
+  - cf. 강의에서는 UserService에 바로 작성했으나, 나는 별도의 클래스로 분리함
+  - AuthenticationService에서 이용하기 위해 UserRepository에 findByEmail() 추가
+  - AuthenticationService는 UserDetailsService를 구현하도록 하여 loadUserByUsername() 메서드를 구현
+    - loadUserByUsername()은 UserDetails 객체를 반환 
+    - UserDetailsService는 단순한 인터페이스로 loadUserByUsername() 외 다른 멤버가 없음, 당연히 default 메서드도 없음
+  - AuthenticationService의 역할은 username(혹은 email과 같이 사용자를 식별할 수 있는 것)을 이용해
+    - UserEntity처럼 사용자 정보가 담긴 객체를 가져와서
+    - Spring Security에서 인증에 사용할 수 있는 사용자 정보인 UserDetails 객체로 바꿔주는 역할
+
+#### Spring Security config 설정 - UserServiceSecurityConfig 수정
+- path 관련 설정
+  - csrf 무시하도록 일단 설정해둠 - "/login" path에 대해 
+  - authorization 설정
+    - "/users" path로 오는 POST에 대해서는 permitAll()
+    - 다른 path에 대해서는 authenticated()로 인증이 필요하도록 설정
+- authentication manager 관련 작업
+  - http.getSharedObject(AuthenticationManagerBuilder.class)로 AuthenticationManagerBuilder 객체를 받아옴
+    - cf. 단순하게 빈으로 등록된 authenticationManagerBuilder를 받아오려고 하면 Spring context 구성 시 실패함(DaoAuthenticationConfigurer가 이미 빌드된 객체라고 함)
+  - 이후 이 authenticationManagerBuilder에 userDetailsService와 passwordEncoder를 세팅해줌
+    - userDetailsService로는 앞서 작성한 AuthenticationService 사용
+    - passwordEncoder로는 미리 작성해둔 BCryptPasswordEncoder 객체 사용
+  - 그 후 authenticationManagerBuilder.build()로 AuthenticationManager 객체를 얻음
+  - 이 AuthenticationManager 객체를 SecurityFilterChain에 authenticationManager로도 등록해둠
+    - ex. http. ... .authenticationManager(authenticationManager)
+    - cf. 이 부분이 빠지면 Spring context 구성 시 오류(This object has already been built.)
+      - 이미 build()가 호출되어 구성된 AuthenticationManager가 있는데,
+      - SecurityFilterChain 구성 시 명시해주지 않으면, 또 다른 AuthenticationManager 기본 객체를 구성하려고 시도해서 발생하는 오류라고 추정함
+      - 자세한 원인은 알아볼 필요가 있을 듯함  
+- 인증 처리를 위한 filter 추가 작업
+  - 위에서 만들어둔 AuthenticationManager 객체를 인자로 넘겨 CustomAuthenticationFilter 객체를 생성한 후
+  - SecurityFilterChain 구성 시 addFilter()로 추가
+  - cf. 강의에서는 AuthenticationFilter라는 이름의 클래스를 만들고, 계속 해당 이름을 언급했지만 약간 오해의 소지가 있다고 생각함
+    - Spring Security에 이미 AuthenticationFilter라는 클래스가 있고
+    - 이 AuthenticationFilter는 OncePerRequestFilter의 subtype임
+    - 그런데 CustomAuthenticationFilter의 supertype인 UsernamePasswordAuthenticationFilter는 AbstractAuthenticationProcessingFilter의 subtype이고
+    - 따라서 새로 작성한 CustomAuthenticationFilter는 AuthenticationFilter의 subtype은 아님
+  - 이렇게 추가한 filter가 의존하는 AuthenticationManager를 이용해서 인증 작업을 진행하는데
+    - 위에서 설정해두었듯 AuthenticationManager는 UserDetailsService와 PasswordEncoder에 의존하고 있고
+    - UserDetailsService로 username 등이 일치하는 사용자의 정보를 바탕으로 UserDetails 객체를 구성함
+    - 이렇게 구성된 UserDetails 객체와 LoginRequest로부터 구성된 UsernamePasswordAuthenticationToken의 정보를
+      - PasswordEncoder 등을 활용하여 비교하는 과정이 있다고 생각하면 됨
+
+### Users Microservice - Routes 정보 변경, Routes 테스트
+- API gateway routes 정보 변경
+  - gateway에 들어올 때는 어떤 microservice를 호출할지 판단하기 위해 "/user-service" prefix를 붙여서 받지만
+  - microservice를 호출할 때는 "/user-service" prefix를 없애고 호출할 수 있도록
+  - gateway route의 filter를 적절히 설정함
+    - 정규 표현식 활용
+    - filters의 RewritePath=... 활용
+- user-service 쪽 application.yml에서 server.servlet.context-path로 설정해둔 url prefix 설정은 제거함
