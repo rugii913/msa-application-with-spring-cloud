@@ -1,7 +1,7 @@
 server:
   port: 0 # Spring Boot의 random port 지원
-  servlet:
-    context-path: /user-service
+#  servlet:
+#    context-path: /user-service
 
 spring:
   application:
@@ -20,6 +20,14 @@ spring:
   jpa: # embedded DB를 사용할 경우 명시하지 않아도 기본 create-drop이라고 적혀있으나, 동작하지 않았기에 일부러 명시함
     hibernate:
       ddl-auto: create-drop
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+    remote:
+      restart:
+        enabled: false
 
 eureka:
   client:
