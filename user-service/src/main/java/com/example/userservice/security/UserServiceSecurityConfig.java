@@ -24,7 +24,7 @@ public class UserServiceSecurityConfig {
         /*
         * cf. http.getSharedObject(AuthenticationManagerBuilder.class)로 객체를 얻어 오지 않고,
         * - 메서드의 파라미터로 주입받으면 오류 발생
-        * - Error creating bean with name 'securityFilterChain' defined in class path resource ... DaoAuthenticationConfigurer@7c97f39b to already built object ...
+        * - Error creating bean with name 'securityFilterChain' defined in class path resource ... DaoAuthenticationConfigurer@... to already built object ...
         * */
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(authenticationService).passwordEncoder(passwordEncoder);

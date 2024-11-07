@@ -16,7 +16,7 @@ public class AuthenticationService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public AuthenticationService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
