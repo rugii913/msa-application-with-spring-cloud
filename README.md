@@ -608,6 +608,45 @@
     - 이렇게 구성된 UserDetails 객체와 LoginRequest로부터 구성된 UsernamePasswordAuthenticationToken의 정보를
       - PasswordEncoder 등을 활용하여 비교하는 과정이 있다고 생각하면 됨
 
+#### (별도 확인) Spring Security를 사용하는 서버 API 호출 시 응답 상태 및 메시지 등 관련하여 알아둘 점
+- 강의 진행과 별도로 API 호출 시도 중 Spring Security를 사용할 때의 기본적인 서버 응답 때문에 혼란을 겪은 부분이 있었음
+- (1) path "/error"로 연결할 수 없는 경우(ex. "/error"가 permitAll()이 아님)
+  - 오류가 없는 요청에서는 문제 없이 동작하나
+  - 오류 발생 시 403 Forbidden status를 갖고 있으나, body가 비어있는 응답을 받음 
+- (2) GET이 아닌 메서드에 대해 적절히 CSRF 보호 처리가 되지 않은 경우
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Forbidden
+- 이하 (3) ~ (7) 예시는 "/error" 연결 및 CSRF 보호 처리에 대해서는 문제 없음을 가정 
+- (3) authentication이 필요한 API를 authentication 없이 호출한 경우
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Access Denied
+- (4) anyRequest().authenticated()일 때 서버에 없는 path로 요청을 한 경우 - 위 (1)과 같은 응답(강의에서 다소 잘못 설명)
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Access Denied
+  - 왜 이런 응답을 보내는가?
+    - servlet에서 path에 매핑되는 적절한 메서드로 연결하기 전에 Security filter chain에서 인증, 인가를 확인
+    - 특정 path를 제외한 모든 path에 대해 authenticated()일 것을 요구했으나
+    - (그 path가 사용자에 의해 정의됐는지 여부와 상관 없이) authentication 정보가 없기 때문에 AccessDenied 메시지를 보내는 것
+- (4-1) cf. anyRequest().authenticated()일 때 서버에 path는 있으나 잘못된 method로 요청한 경우(ex. POST /login이 아닌 GET /login 요청)
+  - 위 (4)와 같음
+- (5) cf. anyRequest().permitAll() 일 때 서버에 없는 path로 요청을 한 경우
+  - status: 404(Not Found)
+  - error: Not Found
+  - message: No static resource xxx...
+  - - cf. security filter chain은 문제 없이 통과했으나 서버 내부에서 던진 오류
+- (6) 올바르지 않은 형식(ex. Content-Type을 JSON으로 지정했으나 JSON에 맞지 않는 형식으로 보낸 경우)
+  - status: 500(Internal Server Error)
+  - error: Internal Server Error
+  - message: 서버에서 던진 에러 메시지
+  - cf. "서버에서 던진 에러 메시지"라고 표현했듯, security filter chain에서 던진 오류가 아니라 서버 내부에서 던진 오류
+- (7) 인증 정보가 맞지 않는 경우(ex. "/login" 요청 시 일치하는 아이디 없음, 비밀번호 불일치)
+  - status: 401(Unauthorized)
+  - error: Unauthorized
+  - message: Unauthorized
+
 ### Users Microservice - Routes 정보 변경, Routes 테스트
 - API gateway routes 정보 변경
   - gateway에 들어올 때는 어떤 microservice를 호출할지 판단하기 위해 "/user-service" prefix를 붙여서 받지만
