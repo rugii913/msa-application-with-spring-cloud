@@ -608,6 +608,14 @@
     - 이렇게 구성된 UserDetails 객체와 LoginRequest로부터 구성된 UsernamePasswordAuthenticationToken의 정보를
       - PasswordEncoder 등을 활용하여 비교하는 과정이 있다고 생각하면 됨
 
+#### Spring Security 기본 제공 로그인 사용
+- 프로젝트(user-service)에 명시적으로 "/login" path 및 이에 매핑되는 메서드를 추가하지 않았으나
+  - Spring Security를 구성해둔 것만으로 기본적으로 "/login" 및 이에 매핑되는 로그인 메서드를 이용할 수 있음
+- 이 자동 구성된 로그인 메서드에서 다음을 이용해 인증을 처리
+  - 위에서 작성해둔 CustomAuthenticationFilter(UsernamePasswordAuthentication의 subtype)
+  - AuthenticationManagerBuilder를 이용해 구성한 뒤 security filter chain에 등록해둔 AuthenticationManager
+  - 그 밖의 CustomAuthenticationFilter에서 이용하도록 작성해둔 코드들
+
 #### (별도 확인) Spring Security를 사용하는 서버 API 호출 시 응답 상태 및 메시지 등 관련하여 알아둘 점
 - 강의 진행과 별도로 API 호출 시도 중 Spring Security를 사용할 때의 기본적인 서버 응답 때문에 혼란을 겪은 부분이 있었음
 - (1) path "/error"로 연결할 수 없는 경우(ex. "/error"가 permitAll()이 아님)
