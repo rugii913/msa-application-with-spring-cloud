@@ -57,7 +57,8 @@ public class UserServiceSecurityConfig {
                                 // cf. "/error"를 추가하지 않는 경우, error 호출에 대한 권한이 없으므로, 원래 던져진 에러가 404든 500이든 상관 없이, 403 Forbidden만을 응답받게 됨
                                 new AntPathRequestMatcher("/error")
                         ).permitAll()
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // 테스트를 위해 임시로 열어둠 
                 )
                 .authenticationManager(authenticationManager) // cf. 이 부분이 빠지면 Spring context 구성 시 오류(This object has already been built.)
                 .addFilter(customAuthenticationFilter)
