@@ -19,7 +19,8 @@ public class UserServiceSecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthenticationService authenticationService,
-            BCryptPasswordEncoder passwordEncoder
+            BCryptPasswordEncoder passwordEncoder,
+            JwtConfig.JwtConfigProperties jwtConfigProperties
     ) throws Exception {
         /*
         * cf. http.getSharedObject(AuthenticationManagerBuilder.class)로 객체를 얻어 오지 않고,
@@ -35,7 +36,7 @@ public class UserServiceSecurityConfig {
         * - CustomAuthenticationFilter의 supertype인 UsernamePasswordAuthenticationFilter는 AbstractAuthenticationProcessingFilter의 subtype이고
         * - 따라서 CustomAuthenticationFilter는 AuthenticationFilter의 subtype은 아님
         * */
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager);
+        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManager, jwtConfigProperties);
 
         return http
                 //.csrf(AbstractHttpConfigurer::disable) // csrfConfigurer -> csrfConfigurer.disable()를 넘길 경우, IDE에서 메서드 참조로 변경할 것을 추천함

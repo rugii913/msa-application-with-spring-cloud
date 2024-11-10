@@ -2,17 +2,16 @@ package com.example.userservice.service;
 
 import com.example.userservice.jpa.UserEntity;
 import com.example.userservice.jpa.UserRepository;
-import org.springframework.security.core.userdetails.User;
+import com.example.userservice.security.CustomUser;
+import com.example.userservice.security.CustomUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class AuthenticationService implements UserDetailsService {
+public class AuthenticationService implements CustomUserDetailsService {
 
     private final UserRepository userRepository;
 
@@ -21,12 +20,12 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
         UserEntity userEntity = userRepository.findByEmail(email);
 
         if (userEntity == null) throw new UsernameNotFoundException(email);
 
-        return new User(userEntity.email, userEntity.encryptedPassword,
+        return new CustomUser(userEntity.userId, userEntity.encryptedPassword,
                 true, true, true, true, List.of());
     }
 }
