@@ -663,3 +663,51 @@
     - 정규 표현식 활용
     - filters의 RewritePath=... 활용
 - user-service 쪽 application.yml에서 server.servlet.context-path로 설정해둔 url prefix 설정은 제거함
+
+### Users Microservice - 로그인 처리 과정, 로그인 성공 처리, JWT 생성
+- 사용자의 email과 password 입력값을 이용한 인증 성공 후 JWT를 생성하는 작업
+
+#### (별도 확인) Spring Security 관련 디버깅 시 중단점을 설정할 곳들
+- (1) 직접 작성하여 bean으로 등록한 클래스 혹은 SecurityFilterChain을 반환하는 메서드 내에서 구성했으나 직접 객체를 생성한 경우
+  - 직접 작성한 코드 내에 중단점 설정 
+- (2) SecurityFilterChain을 반환하는 메서드 내에서 구성했으며 직접 객체를 생성하지 않고 HttpSecurity 객체의 메서드 체이닝을 사용하여 구성된 security 로직
+  - FilterChainProxy의 내부 클래스인 VirtualFilterChain의 doFilter(ServletRequest request, ServletResponse response)의 nextFilter.doFilter(request, response, this); 부분
+  - 왜 FilterChainProxy의 doFilter(ServletRequest request, ServletResponse response, FilterChain chain)에 중단점을 걸지 않는가?
+    - FilterChainProxy의 doFilter()는 Spring Security에서 가장 앞 쪽으로 드러난 진입점이 되는 filter로 이해하면 될 것
+    - 실제로 SecurityFilterChain을 반환하는 메서드에서 등록된 filter들이 동작하는 곳이 VirtualFilterChain의 doFilter()
+    - 두 doFilter()에 모두 중단점을 걸고 프레임을 확인해보면
+      - FilterChainProxy의 doFilter()에서 FilterChainProxy 내부의 doFilterInternal()을 호출한 뒤
+      - doFilterInternal()의 this.filterChainDecorator.decorate(reset, filters).doFilter(firewallRequest, firewallResponse) 코드 이후로
+      - SecurityFilterChain을 반환하는 메서드에서 등록된 filter 혹은 Spring Security에서 기본적으로 등록시킨 filter들이
+        - VirtualFilterChain의 doFilter()의 코드 nextFilter.doFilter(request, response, this)를 따라 차곡차곡 call stack을 쌓으면서 호출되는 것을 확인해볼 수 있음
+  
+#### 로그인 성공 시 토큰 발급 작업
+- 인증 filter(UsernamePasswordAuthenticationFilter의 subtype)의 successfulAuthentication() 구현
+  - application.yml에서 JWT의 만료 시간, 비밀 키 정보를 갖고 있도록 하고, 이를 successfulAuthentication()에서 JWT를 build하는 데에 사용
+- 강의와 다르게 작성한 부분
+  - 강의와 다르게 UserService(혹은 내 경우 AuthenticationService)에 getUserDetailsByEmail()을 작성하지 않음
+    - 강의에서 작성한 메서드는 이름과도 다르게 UserDetails 객체를 return하지 않고, UserDto를 return했으며
+      - 이 같은 방식이 아니더라도 충분히 구현 가능하다고 판단함
+    - UserDetails의 subtype을 return하는 loadUserByUsername()(내가 수정한 코드에서는 아래에서 설명할 loadUserByEmail())에서
+      - UserDetails의 getUsername()이 호출될 때 userId 값을 가져가도록 return new CustomUser(userEntity.userId, userEntity.encryptedPassword, ...)와 같이 구현
+      - 위에서 CustomUser는 아래에서 설명할 새로 정의한 wrapper class
+    - 덕분에 CustomAuthenticationFilter에서 UserService(혹은 내가 수정한 코드에서는 AuthenticationService)에 의존하지 않게 됨
+      - 애초에 AuthenticationService의 loadUserByUsername()(내가 수정한 코드에서는 아래에서 설명할 loadUserByEmail())에서
+      - 꼭 필요한 정보를 담아서 return 하도록 작업한 것
+  - 강의와 다르게 UserDetailsService의 wrapper인 CustomUserDetailsService, User의 wrapper인 CustomUser 작성
+    - AuthenticationService에서 사용하는 메서드의 이름이 loadUserByUsername()인 것이 부적절하다고 느낌
+      - 이에 따라 UserDetailsService의 wrapper인 CustomUserDetailsService를 작성하여 loadUserByEmail()을 정의
+      - CustomUserDetailsService는 UserDetailsService를 상속
+        - loadUserByUsername()이 loadUserByEmail()을 호출하도록 오버라이딩
+      - AuthenticationService는 CustomUserDetailsService를 구현하도록 하여 AuthenticationService에서는 loadUserByEmail()을 구현하게 함
+    - authentication 과정에서 JWT payload의 subject로 사용할 것을 userId로 정했는데, Spring Security 제공 User의 subject는 username인 점이 부적절하다고 느낌
+      - User의 wrapper인 CustomUser를 작성하여 생성 시의 parameter 이름이 username이 아닌 userId로 보이도록 하고,
+        - 실제로는 super() 생성자 호출 시 username에 넣도록 함
+      - CustomUser에 getUserId()를 정의하여 supertype인 User의 username 값을 가져오도록 구현
+      - 이에 따라 Spring Security에서 구성된 Authentication type 객체의 principal을 CustomUser로 type casting하면
+        - getUserId()로 (실제로는 username 필드에 저장된) userId를 얻어오도록 하고
+        - 이를 이용해 JWT를 구성할 수 있도록 함
+  - 강의와 다르게 JWT를 build하는 데에 필요한 정보를 application.yml에서 받아올 때
+    - Environment 객체를 이용하지 않고
+    - @EnableConfigurationProperties와 @ConfigurationProperties를 사용
+      - 자세한 내용은 JwtConfig 클래스 소스 코드를 참고 
