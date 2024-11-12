@@ -9,5 +9,6 @@ include(
     "second-service",
     "user-service",
     "catalog-service",
-    "order-service"
+    "order-service",
+    "config-service"
 )
