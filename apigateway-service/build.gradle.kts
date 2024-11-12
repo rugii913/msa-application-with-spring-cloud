@@ -34,6 +34,15 @@ dependencies {
     // caffeine cache
     implementation("com.github.ben-manes.caffeine:caffeine")
 
+    // jjwt
+    /*
+    * cf. io.jsonwebtoken:jjwt:xxx는 legacy로 분류됨, 라이브러리 공식 문서에서 jjwt-api, jjwt-impl, jjwt-jackson을 별도로 가져오길 권장함
+    * - (참고) https://github.com/jwtk/jjwt?tab=readme-ov-file#gradle, https://github.com/jwtk/jjwt?tab=readme-ov-file#understanding-jjwt-dependencies
+    * */
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 

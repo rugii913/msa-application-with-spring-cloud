@@ -1,7 +1,7 @@
 server:
   port: 0 # Spring Boot의 random port 지원
-  servlet:
-    context-path: /user-service
+#  servlet:
+#    context-path: /user-service
 
 spring:
   application:
@@ -20,6 +20,14 @@ spring:
   jpa: # embedded DB를 사용할 경우 명시하지 않아도 기본 create-drop이라고 적혀있으나, 동작하지 않았기에 일부러 명시함
     hibernate:
       ddl-auto: create-drop
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+    remote:
+      restart:
+        enabled: false
 
 eureka:
   client:
@@ -31,6 +39,10 @@ eureka:
     # 같은 microservice가 여러 개 작동할 때도 각 인스턴스를 식별하기 위한 instance-id 부여
     #instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}} #cf. ${spring.cloud.client.hostname}로 작성하면 IP 주소 활용
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
+  expiration-duration-in-minutes: 60
+  secret-key-string: some-secret-key-some-secret-key-some-secret-key
 
 greeting:
   message: Welcome to the simple e-commerce application!

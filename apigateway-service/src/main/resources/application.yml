@@ -24,7 +24,28 @@ spring:
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
+            - Path=/user-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/users
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
             - Path=/user-service/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} # API gateway filter에서 user-service prefix를 없애고 microservice를 호출
+            - AuthorizationHeaderFilter
         - id: catalog-service
           uri: lb://CATALOG-SERVICE
           predicates:
@@ -76,3 +97,6 @@ spring:
 #            filters: # 필터
 #              - AddRequestHeader=second-request, second-request-header-yml
 #              - AddResponseHeader=second-response, second-response-header-yml
+
+jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
+  secret-key-string: some-secret-key-some-secret-key-some-secret-key

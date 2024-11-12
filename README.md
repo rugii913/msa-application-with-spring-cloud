@@ -400,7 +400,7 @@
     - order-service: 상품 주문
       - 클라이언트에서 상품 주문 요청 시 order-service는 catalog-service에 상품 수량 업데이트 요청, 이 때 message queuing system 사용
 
-## section 5. Users Microservice 1
+## section 5. Users Microservice ①
 - 1에서는 회원 가입, 회원 정보 확인, 전체 사용자 목록 조회 기능 구현 (cf. 2에서 로그인 기능 구현)
   - 우선 5개 API 구현 → 사용자 정보 등록, 전체 사용자 조회, 사용자 정보 및 주문 내역 조회, 작동 상태 확인, 환영 메시지
 - 프로젝트 생성
@@ -547,4 +547,187 @@
   - Hibernate의 @ColumnDefault(value = "CURRENT_TIMESTAMP")를 사용할 경우, return 객체의 createdAt을 DB의 값대로 반영하려면
     - entityManager.refresh(savedEntity)와 비슷한 방식으로 해당 entity에 대해 refresh가 필요함
   - 불가피한 경우가 아니라면 Hibernate의 @CreationTimestamp를 이용하여 생성 시의 시간을 기록할 수 있음
-    - default가 있는 DB column의 created_at 값을 반영하는 대신 @CreationTimestamp을 사용하여 서버에서 시간을 기록하게 하는 것 
+    - default가 있는 DB column의 created_at 값을 반영하는 대신 @CreationTimestamp을 사용하여 서버에서 시간을 기록하게 하는 것
+
+## section 7. Users Microservice ②
+- JWT, API gateway의 AuthorizationHeaderFilter를 이용한 로그인 기능
+
+### Users Microservice - AuthenticationFilter 추가, loadUserByUsername() 구현
+- Spring Security에 많은 변화가 있었기 때문에 강의 영상보다는 새로운 예제 코드 및 기타 문서들을 참고하여 작성
+
+#### CustomAuthenticationFilter 및 AuthenticationService 추가 등
+- CustomAuthenticationFilter 작성
+  - 관련하여 로그인 시 사용자 인증 정보를 담을 LoginRequest 작성
+    - HttpServletRequest 객체에서 getInputStream()으로 읽어낸 body를 jackson ObjectMapper로 매핑
+  - UsernamePasswordAuthenticationFilter의 두 메서드 구현
+    - attemptAuthentication()
+      - UsernamePasswordAuthenticationFilter의 필드인 AuthenticationManager 객체의 authenticate()를 호출하여 인증을 위임
+      - AuthenticationManager 객체는 SecurityFilterChain 객체를 반환하는 security 설정 메서드에서 지정해둠
+    - successfulAuthentication()
+      - 로그인 성공 시의 로직이 들어갈 부분 - 아직 로직을 상세히 작성하지는 않음
+- AuthenticationService 작성
+  - cf. 강의에서는 UserService에 바로 작성했으나, 나는 별도의 클래스로 분리함
+  - AuthenticationService에서 이용하기 위해 UserRepository에 findByEmail() 추가
+  - AuthenticationService는 UserDetailsService를 구현하도록 하여 loadUserByUsername() 메서드를 구현
+    - loadUserByUsername()은 UserDetails 객체를 반환 
+    - UserDetailsService는 단순한 인터페이스로 loadUserByUsername() 외 다른 멤버가 없음, 당연히 default 메서드도 없음
+  - AuthenticationService의 역할은 username(혹은 email과 같이 사용자를 식별할 수 있는 것)을 이용해
+    - UserEntity처럼 사용자 정보가 담긴 객체를 가져와서
+    - Spring Security에서 인증에 사용할 수 있는 사용자 정보인 UserDetails 객체로 바꿔주는 역할
+
+#### Spring Security config 설정 - UserServiceSecurityConfig 수정
+- path 관련 설정
+  - csrf 무시하도록 일단 설정해둠 - "/login" path에 대해 
+  - authorization 설정
+    - "/users" path로 오는 POST에 대해서는 permitAll()
+    - 다른 path에 대해서는 authenticated()로 인증이 필요하도록 설정
+- authentication manager 관련 작업
+  - http.getSharedObject(AuthenticationManagerBuilder.class)로 AuthenticationManagerBuilder 객체를 받아옴
+    - cf. 단순하게 빈으로 등록된 authenticationManagerBuilder를 받아오려고 하면 Spring context 구성 시 실패함(DaoAuthenticationConfigurer가 이미 빌드된 객체라고 함)
+  - 이후 이 authenticationManagerBuilder에 userDetailsService와 passwordEncoder를 세팅해줌
+    - userDetailsService로는 앞서 작성한 AuthenticationService 사용
+    - passwordEncoder로는 미리 작성해둔 BCryptPasswordEncoder 객체 사용
+  - 그 후 authenticationManagerBuilder.build()로 AuthenticationManager 객체를 얻음
+  - 이 AuthenticationManager 객체를 SecurityFilterChain에 authenticationManager로도 등록해둠
+    - ex. http. ... .authenticationManager(authenticationManager)
+    - cf. 이 부분이 빠지면 Spring context 구성 시 오류(This object has already been built.)
+      - 이미 build()가 호출되어 구성된 AuthenticationManager가 있는데,
+      - SecurityFilterChain 구성 시 명시해주지 않으면, 또 다른 AuthenticationManager 기본 객체를 구성하려고 시도해서 발생하는 오류라고 추정함
+      - 자세한 원인은 알아볼 필요가 있을 듯함  
+- 인증 처리를 위한 filter 추가 작업
+  - 위에서 만들어둔 AuthenticationManager 객체를 인자로 넘겨 CustomAuthenticationFilter 객체를 생성한 후
+  - SecurityFilterChain 구성 시 addFilter()로 추가
+  - cf. 강의에서는 AuthenticationFilter라는 이름의 클래스를 만들고, 계속 해당 이름을 언급했지만 약간 오해의 소지가 있다고 생각함
+    - Spring Security에 이미 AuthenticationFilter라는 클래스가 있고
+    - 이 AuthenticationFilter는 OncePerRequestFilter의 subtype임
+    - 그런데 CustomAuthenticationFilter의 supertype인 UsernamePasswordAuthenticationFilter는 AbstractAuthenticationProcessingFilter의 subtype이고
+    - 따라서 새로 작성한 CustomAuthenticationFilter는 AuthenticationFilter의 subtype은 아님
+  - 이렇게 추가한 filter가 의존하는 AuthenticationManager를 이용해서 인증 작업을 진행하는데
+    - 위에서 설정해두었듯 AuthenticationManager는 UserDetailsService와 PasswordEncoder에 의존하고 있고
+    - UserDetailsService로 username 등이 일치하는 사용자의 정보를 바탕으로 UserDetails 객체를 구성함
+    - 이렇게 구성된 UserDetails 객체와 LoginRequest로부터 구성된 UsernamePasswordAuthenticationToken의 정보를
+      - PasswordEncoder 등을 활용하여 비교하는 과정이 있다고 생각하면 됨
+
+#### Spring Security 기본 제공 로그인 사용
+- 프로젝트(user-service)에 명시적으로 "/login" path 및 이에 매핑되는 메서드를 추가하지 않았으나
+  - Spring Security를 구성해둔 것만으로 기본적으로 "/login" 및 이에 매핑되는 로그인 메서드를 이용할 수 있음
+- 이 자동 구성된 로그인 메서드에서 다음을 이용해 인증을 처리
+  - 위에서 작성해둔 CustomAuthenticationFilter(UsernamePasswordAuthentication의 subtype)
+  - AuthenticationManagerBuilder를 이용해 구성한 뒤 security filter chain에 등록해둔 AuthenticationManager
+  - 그 밖의 CustomAuthenticationFilter에서 이용하도록 작성해둔 코드들
+
+#### (별도 확인) Spring Security를 사용하는 서버 API 호출 시 응답 상태 및 메시지 등 관련하여 알아둘 점
+- 강의 진행과 별도로 API 호출 시도 중 Spring Security를 사용할 때의 기본적인 서버 응답 때문에 혼란을 겪은 부분이 있었음
+- (1) path "/error"로 연결할 수 없는 경우(ex. "/error"가 permitAll()이 아님)
+  - 오류가 없는 요청에서는 문제 없이 동작하나
+  - 오류 발생 시 403 Forbidden status를 갖고 있으나, body가 비어있는 응답을 받음 
+- (2) GET이 아닌 메서드에 대해 적절히 CSRF 보호 처리가 되지 않은 경우
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Forbidden
+- 이하 (3) ~ (7) 예시는 "/error" 연결 및 CSRF 보호 처리에 대해서는 문제 없음을 가정 
+- (3) authentication이 필요한 API를 authentication 없이 호출한 경우
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Access Denied
+- (4) anyRequest().authenticated()일 때 서버에 없는 path로 요청을 한 경우 - 위 (1)과 같은 응답(강의에서 다소 잘못 설명)
+  - status: 403(Forbidden)
+  - error: Forbidden
+  - message: Access Denied
+  - 왜 이런 응답을 보내는가?
+    - servlet에서 path에 매핑되는 적절한 메서드로 연결하기 전에 Security filter chain에서 인증, 인가를 확인
+    - 특정 path를 제외한 모든 path에 대해 authenticated()일 것을 요구했으나
+    - (그 path가 사용자에 의해 정의됐는지 여부와 상관 없이) authentication 정보가 없기 때문에 AccessDenied 메시지를 보내는 것
+- (4-1) cf. anyRequest().authenticated()일 때 서버에 path는 있으나 잘못된 method로 요청한 경우(ex. POST /login이 아닌 GET /login 요청)
+  - 위 (4)와 같음
+- (5) cf. anyRequest().permitAll() 일 때 서버에 없는 path로 요청을 한 경우
+  - status: 404(Not Found)
+  - error: Not Found
+  - message: No static resource xxx...
+  - - cf. security filter chain은 문제 없이 통과했으나 서버 내부에서 던진 오류
+- (6) 올바르지 않은 형식(ex. Content-Type을 JSON으로 지정했으나 JSON에 맞지 않는 형식으로 보낸 경우)
+  - status: 500(Internal Server Error)
+  - error: Internal Server Error
+  - message: 서버에서 던진 에러 메시지
+  - cf. "서버에서 던진 에러 메시지"라고 표현했듯, security filter chain에서 던진 오류가 아니라 서버 내부에서 던진 오류
+- (7) 인증 정보가 맞지 않는 경우(ex. "/login" 요청 시 일치하는 아이디 없음, 비밀번호 불일치)
+  - status: 401(Unauthorized)
+  - error: Unauthorized
+  - message: Unauthorized
+
+### Users Microservice - Routes 정보 변경, Routes 테스트
+- API gateway routes 정보 변경
+  - gateway에 들어올 때는 어떤 microservice를 호출할지 판단하기 위해 "/user-service" prefix를 붙여서 받지만
+  - microservice를 호출할 때는 "/user-service" prefix를 없애고 호출할 수 있도록
+  - gateway route의 filter를 적절히 설정함
+    - 정규 표현식 활용
+    - filters의 RewritePath=... 활용
+- user-service 쪽 application.yml에서 server.servlet.context-path로 설정해둔 url prefix 설정은 제거함
+
+### Users Microservice - 로그인 처리 과정, 로그인 성공 처리, JWT 생성
+- 사용자의 email과 password 입력값을 이용한 인증 성공 후 JWT를 생성하는 작업
+
+#### (별도 확인) Spring Security 관련 디버깅 시 중단점을 설정할 곳들
+- (1) 직접 작성하여 bean으로 등록한 클래스 혹은 SecurityFilterChain을 반환하는 메서드 내에서 구성했으나 직접 객체를 생성한 경우
+  - 직접 작성한 코드 내에 중단점 설정 
+- (2) SecurityFilterChain을 반환하는 메서드 내에서 구성했으며 직접 객체를 생성하지 않고 HttpSecurity 객체의 메서드 체이닝을 사용하여 구성된 security 로직
+  - FilterChainProxy의 내부 클래스인 VirtualFilterChain의 doFilter(ServletRequest request, ServletResponse response)의 nextFilter.doFilter(request, response, this); 부분
+  - 왜 FilterChainProxy의 doFilter(ServletRequest request, ServletResponse response, FilterChain chain)에 중단점을 걸지 않는가?
+    - FilterChainProxy의 doFilter()는 Spring Security에서 가장 앞 쪽으로 드러난 진입점이 되는 filter로 이해하면 될 것
+    - 실제로 SecurityFilterChain을 반환하는 메서드에서 등록된 filter들이 동작하는 곳이 VirtualFilterChain의 doFilter()
+    - 두 doFilter()에 모두 중단점을 걸고 프레임을 확인해보면
+      - FilterChainProxy의 doFilter()에서 FilterChainProxy 내부의 doFilterInternal()을 호출한 뒤
+      - doFilterInternal()의 this.filterChainDecorator.decorate(reset, filters).doFilter(firewallRequest, firewallResponse) 코드 이후로
+      - SecurityFilterChain을 반환하는 메서드에서 등록된 filter 혹은 Spring Security에서 기본적으로 등록시킨 filter들이
+        - VirtualFilterChain의 doFilter()의 코드 nextFilter.doFilter(request, response, this)를 따라 차곡차곡 call stack을 쌓으면서 호출되는 것을 확인해볼 수 있음
+  
+#### 로그인 성공 시 토큰 발급 작업
+- 인증 filter(UsernamePasswordAuthenticationFilter의 subtype)의 successfulAuthentication() 구현
+  - application.yml에서 JWT의 만료 시간, 비밀 키 정보를 갖고 있도록 하고, 이를 successfulAuthentication()에서 JWT를 build하는 데에 사용
+- 강의와 다르게 작성한 부분
+  - 강의와 다르게 UserService(혹은 내 경우 AuthenticationService)에 getUserDetailsByEmail()을 작성하지 않음
+    - 강의에서 작성한 메서드는 이름과도 다르게 UserDetails 객체를 return하지 않고, UserDto를 return했으며
+      - 이 같은 방식이 아니더라도 충분히 구현 가능하다고 판단함
+    - UserDetails의 subtype을 return하는 loadUserByUsername()(내가 수정한 코드에서는 아래에서 설명할 loadUserByEmail())에서
+      - UserDetails의 getUsername()이 호출될 때 userId 값을 가져가도록 return new CustomUser(userEntity.userId, userEntity.encryptedPassword, ...)와 같이 구현
+      - 위에서 CustomUser는 아래에서 설명할 새로 정의한 wrapper class
+    - 덕분에 CustomAuthenticationFilter에서 UserService(혹은 내가 수정한 코드에서는 AuthenticationService)에 의존하지 않게 됨
+      - 애초에 AuthenticationService의 loadUserByUsername()(내가 수정한 코드에서는 아래에서 설명할 loadUserByEmail())에서
+      - 꼭 필요한 정보를 담아서 return 하도록 작업한 것
+  - 강의와 다르게 UserDetailsService의 wrapper인 CustomUserDetailsService, User의 wrapper인 CustomUser 작성
+    - AuthenticationService에서 사용하는 메서드의 이름이 loadUserByUsername()인 것이 부적절하다고 느낌
+      - 이에 따라 UserDetailsService의 wrapper인 CustomUserDetailsService를 작성하여 loadUserByEmail()을 정의
+      - CustomUserDetailsService는 UserDetailsService를 상속
+        - loadUserByUsername()이 loadUserByEmail()을 호출하도록 오버라이딩
+      - AuthenticationService는 CustomUserDetailsService를 구현하도록 하여 AuthenticationService에서는 loadUserByEmail()을 구현하게 함
+    - authentication 과정에서 JWT payload의 subject로 사용할 것을 userId로 정했는데, Spring Security 제공 User의 subject는 username인 점이 부적절하다고 느낌
+      - User의 wrapper인 CustomUser를 작성하여 생성 시의 parameter 이름이 username이 아닌 userId로 보이도록 하고,
+        - 실제로는 super() 생성자 호출 시 username에 넣도록 함
+      - CustomUser에 getUserId()를 정의하여 supertype인 User의 username 값을 가져오도록 구현
+      - 이에 따라 Spring Security에서 구성된 Authentication type 객체의 principal을 CustomUser로 type casting하면
+        - getUserId()로 (실제로는 username 필드에 저장된) userId를 얻어오도록 하고
+        - 이를 이용해 JWT를 구성할 수 있도록 함
+  - 강의와 다르게 JWT를 build하는 데에 필요한 정보를 application.yml에서 받아올 때
+    - Environment 객체를 이용하지 않고
+    - @EnableConfigurationProperties와 @ConfigurationProperties를 사용
+      - 자세한 내용은 JwtConfig 클래스 소스 코드를 참고 
+
+### Users Microservice - JWT 처리 과정, AuthorizationHeaderFilter 추가, 테스트
+- (email과 password가 아닌) 로그인 성공 후 발급된 JWT를 활용, 이를 검증하여 요청을 호출한 클라이언트가 인증된 사용자임을 확인하는 작업
+- session 방식이 아닌 JWT(bearer token) 방식 사용
+  - bearer authentication
+    - API를 호출할 때 access token을 API 서버에 제출하여 인증 처리
+    - OAuth를 위해 고안된 방법(RFC 6750)
+
+#### apigateway-service에서 JWT를 검증하는 필터 추가 및 적용
+- apigateway-service에 JWT를 검증하는 필터를 작성(AuthorizationHeaderFilter)
+  - 로그인 성공 후 발급된 JWT를 검증하여 인증된 사용자임을 확인하는 것
+  - 작성된 필터를 user-service에서 GET 메서드인 API들에 적용함 → application.yml의 routes 설정
+- 강의와 다르게 작성한 부분
+  - jjwt 버전 관련 - 강의에서 apigateway-service의 AuthorizationHeaderFilter에 사용한
+    - setSigningKey()는 deprecated → verifyWith() 사용, verifyWith() 후 build()로 jwtParser를 가져와야 함
+    - JwtParser의 parseClaimsJws() 역시 deprecated → parseSignedClaims() 사용
+    - Jws\< io.jsonwebtoken.Claims \>(혹은 Jws)의 getBody() 역시 deprecated → getPayload() 사용
+  - 강의에서는 apigateway-service에 jaxb-api를 추가했으나, 추가하지 않아도 동작함
+    - 강의에서는 이를 추가하지 않으면 java.lang.NoClassDefFoundError: javax/xml/bind/DatatypeConverter 오류 발생
+    - 아마도 내 코드에서는 runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") 종속성을 별도로 추가했기 때문이 아닌가 추측함
