@@ -711,3 +711,23 @@
     - Environment 객체를 이용하지 않고
     - @EnableConfigurationProperties와 @ConfigurationProperties를 사용
       - 자세한 내용은 JwtConfig 클래스 소스 코드를 참고 
+
+### Users Microservice - JWT 처리 과정, AuthorizationHeaderFilter 추가, 테스트
+- (email과 password가 아닌) 로그인 성공 후 발급된 JWT를 활용, 이를 검증하여 요청을 호출한 클라이언트가 인증된 사용자임을 확인하는 작업
+- session 방식이 아닌 JWT(bearer token) 방식 사용
+  - bearer authentication
+    - API를 호출할 때 access token을 API 서버에 제출하여 인증 처리
+    - OAuth를 위해 고안된 방법(RFC 6750)
+
+#### apigateway-service에서 JWT를 검증하는 필터 추가 및 적용
+- apigateway-service에 JWT를 검증하는 필터를 작성(AuthorizationHeaderFilter)
+  - 로그인 성공 후 발급된 JWT를 검증하여 인증된 사용자임을 확인하는 것
+  - 작성된 필터를 user-service에서 GET 메서드인 API들에 적용함 → application.yml의 routes 설정
+- 강의와 다르게 작성한 부분
+  - jjwt 버전 관련 - 강의에서 apigateway-service의 AuthorizationHeaderFilter에 사용한
+    - setSigningKey()는 deprecated → verifyWith() 사용, verifyWith() 후 build()로 jwtParser를 가져와야 함
+    - JwtParser의 parseClaimsJws() 역시 deprecated → parseSignedClaims() 사용
+    - Jws\< io.jsonwebtoken.Claims \>(혹은 Jws)의 getBody() 역시 deprecated → getPayload() 사용
+  - 강의에서는 apigateway-service에 jaxb-api를 추가했으나, 추가하지 않아도 동작함
+    - 강의에서는 이를 추가하지 않으면 java.lang.NoClassDefFoundError: javax/xml/bind/DatatypeConverter 오류 발생
+    - 아마도 내 코드에서는 runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") 종속성을 별도로 추가했기 때문이 아닌가 추측함
