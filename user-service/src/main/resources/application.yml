@@ -40,9 +40,10 @@ eureka:
     #instance-id: ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}} #cf. ${spring.cloud.client.hostname}로 작성하면 IP 주소 활용
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 
-jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
-  expiration-duration-in-minutes: 60
-  secret-key-string: some-secret-key-some-secret-key-some-secret-key
+# Spring Cloud Config를 사용하면서 주석 처리
+#jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
+#  expiration-duration-in-minutes: 60
+#  secret-key-string: some-secret-key-some-secret-key-some-secret-key
 
 greeting:
   message: Welcome to the simple e-commerce application!
