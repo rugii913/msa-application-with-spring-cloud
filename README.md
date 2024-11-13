@@ -731,3 +731,27 @@
   - 강의에서는 apigateway-service에 jaxb-api를 추가했으나, 추가하지 않아도 동작함
     - 강의에서는 이를 추가하지 않으면 java.lang.NoClassDefFoundError: javax/xml/bind/DatatypeConverter 오류 발생
     - 아마도 내 코드에서는 runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") 종속성을 별도로 추가했기 때문이 아닌가 추측함
+
+## section 8. Configuration Service
+
+### Spring Cloud Config?
+- 각 app 구성에 필요한 설정 정보를 외부 시스템에서 일원화하여 관리하기 위한 솔루션
+  - 각 서비스를 다시 빌드하지 않고 적용 가능
+  - app 배포 파이프 라인을 통해 개발-테스트-운영 환경에 맞는 설정 정보 관리 가능 
+
+### Spring Cloud Config - Local Git Repository, 프로젝트 생성 → local git repository를 이용한 설정 정보 구성
+- cf. Spring application의 설정 정보의 우선순위
+  - application.yml \> {application-name}.yml (ex. user-service.yml) \> {application-name}-{profile}.yml (ex. user-service-dev.yml)
+- 공유할 설정 정보를 담을 local git repository 생성
+  - local file system에 임의의 폴더를 만들고 git init
+  - 공유할 정보가 담긴 yml 파일 작성
+  - yml 파일 add 및 commit
+- 프로젝트 생성
+  - 종속성: Config Server(Spring Cloud Config)
+  - main()이 있는 클래스에 @EnableConfigServer 애노테이션 붙이기
+  - config-service의 application.yml 작성
+    - spring.cloud.config.server.git.uri에 local git repository를 명시 → 해당 경로의 yml 파일 설정 정보를 git을 이용하여 불러옴
+      - ex. file:///.../git-local-repo
+      - cf. git을 기반으로 정보를 불러오는 것이므로 해당 경로에 git이 없다면, 설정 정보를 담은 파일이 있더라도 설정 정보를 가져올 수 없음
+    - {service ip 주소}:{포트 번호}/{작성한 yml 파일 이름}/{profile 이름}을 호출하여 확인 가능
+      - cf. 별다른 profile를 명시하지 않았다면 default로 표시
