@@ -63,6 +63,9 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-config")
     implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
+    // spring-boot-starter-actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
     // devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
