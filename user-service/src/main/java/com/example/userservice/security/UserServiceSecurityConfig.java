@@ -45,7 +45,8 @@ public class UserServiceSecurityConfig {
                         .ignoringRequestMatchers(
                                 new AntPathRequestMatcher("/users/**"),
                                 new AntPathRequestMatcher("/h2-console/**"),
-                                new AntPathRequestMatcher("/login") // cf. POST이므로 추가하지 않으면 403 Forbidden만을 받게 됨
+                                new AntPathRequestMatcher("/login"), // cf. POST이므로 추가하지 않으면 403 Forbidden만을 받게 됨
+                                new AntPathRequestMatcher("/actuator/refresh")
                         )
                 )
                 .authorizeHttpRequests(registry -> registry
@@ -54,6 +55,7 @@ public class UserServiceSecurityConfig {
                                 new AntPathRequestMatcher("/h2-console/**"),
                                 new AntPathRequestMatcher("/health-check"),
                                 new AntPathRequestMatcher("/welcome"),
+                                new AntPathRequestMatcher("/actuator/**"),
                                 // cf. "/error"를 추가하지 않는 경우, error 호출에 대한 권한이 없으므로, 원래 던져진 에러가 404든 500이든 상관 없이, 403 Forbidden만을 응답받게 됨
                                 new AntPathRequestMatcher("/error")
                         ).permitAll()
