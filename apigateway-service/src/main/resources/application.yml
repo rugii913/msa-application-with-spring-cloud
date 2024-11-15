@@ -11,7 +11,7 @@ eureka:
 spring:
   application:
     name: apigateway-service
-# reactive gateway 사용 시 구성
+  # reactive gateway 사용 시 구성
   cloud:
     gateway:
       default-filters:
@@ -34,6 +34,14 @@ spring:
           predicates:
             - Path=/user-service/users
             - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/actuator/**
+            - Method=GET, POST
           filters:
             - RemoveRequestHeader=Cookie
             - RewritePath=/user-service/(?<segment>.*), /$\{segment}
@@ -98,5 +106,12 @@ spring:
 #              - AddRequestHeader=second-request, second-request-header-yml
 #              - AddResponseHeader=second-response, second-response-header-yml
 
-jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
-  secret-key-string: some-secret-key-some-secret-key-some-secret-key
+# Spring Cloud Config를 사용하면서 주석 처리
+#jwt-config: # JwtConfig.JwtConfigProperties.class로 바인딩
+#  secret-key-string: some-secret-key-some-secret-key-some-secret-key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, httpexchanges # httptrace → httpexchanges로 이름 변경
