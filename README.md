@@ -742,6 +742,8 @@
 ### Spring Cloud Config - Local Git Repository, 프로젝트 생성 → local git repository를 이용한 설정 정보 구성
 - cf. Spring application의 설정 정보의 우선순위
   - application.yml \> {application-name}.yml (ex. user-service.yml) \> {application-name}-{profile}.yml (ex. user-service-dev.yml)
+    - user-service-dev.yml을 사용할 것처럼 명시해두었는데, 해당 파일이 없으면 user-service.yml의 설정 정보 사용
+    - user-service.yml을 사용할 것처럼 명시해두었는데, 해당 파일이 없으면 application.yml의 설정 정보 사용
 - 공유할 설정 정보를 담을 local git repository 생성
   - local file system에 임의의 폴더를 만들고 git init
   - 공유할 정보가 담긴 yml 파일 작성
@@ -771,3 +773,13 @@
       - 실제로 config client 쪽에서 변경된 설정 정보를 사용함을 확인할 수 있음
     - 설정 정보 변경 후 git add, commit 하지 않더라도 변경 내용이 반영됨
   - (3) Spring Cloud Bus 사용 → 다음 section 9에서 설명
+
+### Profiles을 사용한 Configuration 적용
+- config server에서 사용하는 yml 파일을 여러 profile로 나눔
+  - ex. ecommerce.yml, ecommerce-dev.yml, ecommerce-prod.yml
+- 각 service의 bootstrap.yml에서 spring.profiles.active에 사용할 프로파일을 지정
+  - cf. java tool의 -jar 옵션으로 jar 파일을 실행시킬 때 -D 옵션으로 system property를 이용해 실행할 프로파일을 지정할 수도 있음 
+    - ex. -Dspring.profiles.active=dev
+    - 참고([JDK 21 Documentation](https://docs.oracle.com/en/java/javase/21/index.html) → JDK Tool Specifications(Tools) → java(All Platforms))
+      - https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html#using-the-jdk_java_options-launcher-environment-variable
+      - 혹은 위 문서 Standard Options for Java 부분의 -Dproperty=value 부분 참고
