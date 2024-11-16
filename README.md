@@ -755,3 +755,19 @@
       - cf. git을 기반으로 정보를 불러오는 것이므로 해당 경로에 git이 없다면, 설정 정보를 담은 파일이 있더라도 설정 정보를 가져올 수 없음
     - {service ip 주소}:{포트 번호}/{작성한 yml 파일 이름}/{profile 이름}을 호출하여 확인 가능
       - cf. 별다른 profile를 명시하지 않았다면 default로 표시
+
+### user-service, apigateway-service에서 Spring Cloud Config 연동 → 각 service를 config server의 client로
+- user-service, apigateway-service가 config client가 되도록 함
+  - 종속성 추가: 각 microservice에 spring-cloud-starter-config, spring-cloud-starter-bootstrap
+  - 각 microservice의 resources 디렉토리에 bootstrap.yml을 추가하고 config server의 uri와 server에서 불러올 설정의 이름을 명시
+    - cf. bootstrap.yml은 application.yml보다 메모리에 먼저 로드됨
+- **config client에서 config server의 정보를 불러오는 세 가지 방법**
+  - (1) 서버 재기동
+    - 별다른 설정을 하지 않는다면 서버 재기동 방식으로만 config server에 있는 설정 정보를 불러올 수 있음
+  - (2) actuator refresh
+    - 종속성 추가: spring-boot-starter-actuator
+      - 추가 후 applicatoin.yml에서 actuator의 refresh를 exposure하는 endpoint로 추가 
+    - config server의 설정 정보 변경 후 config client의 POST .../actuator/refresh를 호출하면 변경된 설정 정보 목록을 응답
+      - 실제로 config client 쪽에서 변경된 설정 정보를 사용함을 확인할 수 있음
+    - 설정 정보 변경 후 git add, commit 하지 않더라도 변경 내용이 반영됨
+  - (3) Spring Cloud Bus 사용 → 다음 section 9에서 설명
