@@ -783,3 +783,18 @@
     - 참고([JDK 21 Documentation](https://docs.oracle.com/en/java/javase/21/index.html) → JDK Tool Specifications(Tools) → java(All Platforms))
       - https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html#using-the-jdk_java_options-launcher-environment-variable
       - 혹은 위 문서 Standard Options for Java 부분의 -Dproperty=value 부분 참고
+
+### Remote Git Repository
+- config server에서 사용하고 있던 local repository를 remote repository(ex. gitHub)로 push하기
+  - 보안상 필요하다면 private repository로 설정
+  - git remote -v로 현재 remote 정보 확인
+  - git remote add origin {remote repository url}로 remote repository를 origin이라는 이름으로 등록하기
+    - 다시 git remote -v를 이용해 변경된 remote 정보를 확인할 수 있음
+  - 처음 push할 때는 git push --set-upstream origin main으로 upstream branch를 설정(remote의 main과 local의 main을 동기화)
+- config server에서 불러오는 설정 정보의 경로를 재설정
+  - 기존에 사용하던 파일 시스템 경로는 주석 처리
+  - 위의 remote repository url로 경로 설정
+    - private repository라면 username과 password까지 명시
+- config-service 실행 후 .../ecommerce/default, .../ecommerce/dev, .../ecommerce/prod로 접속하여 remote의 설정 정보를 잘 가져오는 것을 확인
+  - config-service를 종료하지 않은 상태에서 설정 정보를 변경 후 remote repository에 push하면
+  - 변경된 remote 설정 정보를 config-service에서 잘 가져오는 것을 확인할 수 있음 
