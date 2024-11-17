@@ -742,8 +742,7 @@
 ### Spring Cloud Config - Local Git Repository, 프로젝트 생성 → local git repository를 이용한 설정 정보 구성
 - cf. Spring application의 설정 정보의 우선순위
   - application.yml \> {application-name}.yml (ex. user-service.yml) \> {application-name}-{profile}.yml (ex. user-service-dev.yml)
-    - user-service-dev.yml을 사용할 것처럼 명시해두었는데, 해당 파일이 없으면 user-service.yml의 설정 정보 사용
-    - user-service.yml을 사용할 것처럼 명시해두었는데, 해당 파일이 없으면 application.yml의 설정 정보 사용
+    - user-service-dev.yml을 사용할 것으로 명시해두면, user-service.yml 및 application.yml의 설정 정보를 함께 사용
 - 공유할 설정 정보를 담을 local git repository 생성
   - local file system에 임의의 폴더를 만들고 git init
   - 공유할 정보가 담긴 yml 파일 작성
@@ -772,6 +771,7 @@
     - config server의 설정 정보 변경 후 config client의 POST .../actuator/refresh를 호출하면 변경된 설정 정보 목록을 응답
       - 실제로 config client 쪽에서 변경된 설정 정보를 사용함을 확인할 수 있음
     - 설정 정보 변경 후 git add, commit 하지 않더라도 변경 내용이 반영됨
+    - 단점: 설정이 변경된 경우, 이를 사용하는 각 microservice 모두 .../actuator/refresh를 호출해줘야 함
   - (3) Spring Cloud Bus 사용 → 다음 section 9에서 설명
 
 ### Profiles을 사용한 Configuration 적용
@@ -797,4 +797,18 @@
     - private repository라면 username과 password까지 명시
 - config-service 실행 후 .../ecommerce/default, .../ecommerce/dev, .../ecommerce/prod로 접속하여 remote의 설정 정보를 잘 가져오는 것을 확인
   - config-service를 종료하지 않은 상태에서 설정 정보를 변경 후 remote repository에 push하면
-  - 변경된 remote 설정 정보를 config-service에서 잘 가져오는 것을 확인할 수 있음 
+  - 변경된 remote 설정 정보를 config-service에서 잘 가져오는 것을 확인할 수 있음
+- 참고
+  - [Spring 공식 - Spring Cloud Config/Spring Cloud Config Server/Environment Repository/Git Backend](https://docs.spring.io/spring-cloud-config/reference/server/environment-repository/git-backend.html)
+
+### Native File Repository → native 프로파일에서 동작하는 file system backend 이용하기
+- git을 사용하지 않고, file system의 파일을 그대로 설정 정보로 사용하는 방법
+  - spring.cloud.config.server.git.uri=file:///...으로 명시하는 것은 파일 시스템을 이용하지만 파일 시스템에 있는 git을 이용하는 것
+  - spring.cloud.config.server.native.search-locations=file:///...은 git을 전혀 사용하지 않고 파일 시스템에 있는 파일을 직접 사용하는 것
+  - cf. Windows의 경우 file:///로 명시, 그 외의 경우 file:// 로 명시 
+    - cf. Windows에서 native를 사용할 때 file:///이 아닌 file:\\\ 로 작성하면 오류 발생
+- 이 때 spring.profiles.active=native로 명시해줘야 함
+  - 즉 native라는 프로파일을 사용할 때만 file system에서 직접 설정 정보를 불러올 수 있음
+- 참고
+  - [Spring 공식 - Spring Cloud Config/Spring Cloud Config Server/Environment Repository/File System Backend](https://docs.spring.io/spring-cloud-config/reference/server/environment-repository/file-system-backend.html)
+  - [기타 블로그 - 위 공식 문서 번역](https://godekdls.github.io/Spring%20Cloud%20Config/spring-cloud-config-server/#file-system-backend)
