@@ -58,6 +58,14 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
+    // spring-cloud-starter-config, spring-cloud-starter-bootstrap
+    // cf. https://docs.spring.io/spring-cloud-config/reference/client.html#config-first-bootstrap
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
+
+    // spring-boot-starter-actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
     // devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 

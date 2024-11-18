@@ -731,3 +731,84 @@
   - 강의에서는 apigateway-service에 jaxb-api를 추가했으나, 추가하지 않아도 동작함
     - 강의에서는 이를 추가하지 않으면 java.lang.NoClassDefFoundError: javax/xml/bind/DatatypeConverter 오류 발생
     - 아마도 내 코드에서는 runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6") 종속성을 별도로 추가했기 때문이 아닌가 추측함
+
+## section 8. Configuration Service
+
+### Spring Cloud Config?
+- 각 app 구성에 필요한 설정 정보를 외부 시스템에서 일원화하여 관리하기 위한 솔루션
+  - 각 서비스를 다시 빌드하지 않고 적용 가능
+  - app 배포 파이프 라인을 통해 개발-테스트-운영 환경에 맞는 설정 정보 관리 가능 
+
+### Spring Cloud Config - Local Git Repository, 프로젝트 생성 → local git repository를 이용한 설정 정보 구성
+- cf. Spring application의 설정 정보의 우선순위
+  - application.yml \> {application-name}.yml (ex. user-service.yml) \> {application-name}-{profile}.yml (ex. user-service-dev.yml)
+    - user-service-dev.yml을 사용할 것으로 명시해두면, user-service.yml 및 application.yml의 설정 정보를 함께 사용
+- 공유할 설정 정보를 담을 local git repository 생성
+  - local file system에 임의의 폴더를 만들고 git init
+  - 공유할 정보가 담긴 yml 파일 작성
+  - yml 파일 add 및 commit
+- 프로젝트 생성
+  - 종속성: Config Server(Spring Cloud Config)
+  - main()이 있는 클래스에 @EnableConfigServer 애노테이션 붙이기
+  - config-service의 application.yml 작성
+    - spring.cloud.config.server.git.uri에 local git repository를 명시 → 해당 경로의 yml 파일 설정 정보를 git을 이용하여 불러옴
+      - ex. file:///.../git-local-repo
+      - cf. git을 기반으로 정보를 불러오는 것이므로 해당 경로에 git이 없다면, 설정 정보를 담은 파일이 있더라도 설정 정보를 가져올 수 없음
+    - {service ip 주소}:{포트 번호}/{작성한 yml 파일 이름}/{profile 이름}을 호출하여 확인 가능
+      - cf. 별다른 profile를 명시하지 않았다면 default로 표시
+
+### user-service, apigateway-service에서 Spring Cloud Config 연동 → 각 service를 config server의 client로
+- user-service, apigateway-service가 config client가 되도록 함
+  - 종속성 추가: 각 microservice에 spring-cloud-starter-config, spring-cloud-starter-bootstrap
+  - 각 microservice의 resources 디렉토리에 bootstrap.yml을 추가하고 config server의 uri와 server에서 불러올 설정의 이름을 명시
+    - cf. bootstrap.yml은 application.yml보다 메모리에 먼저 로드됨
+- **config client에서 config server의 정보를 불러오는 세 가지 방법**
+  - (1) 서버 재기동
+    - 별다른 설정을 하지 않는다면 서버 재기동 방식으로만 config server에 있는 설정 정보를 불러올 수 있음
+  - (2) actuator refresh
+    - 종속성 추가: spring-boot-starter-actuator
+      - 추가 후 applicatoin.yml에서 actuator의 refresh를 exposure하는 endpoint로 추가 
+    - config server의 설정 정보 변경 후 config client의 POST .../actuator/refresh를 호출하면 변경된 설정 정보 목록을 응답
+      - 실제로 config client 쪽에서 변경된 설정 정보를 사용함을 확인할 수 있음
+    - 설정 정보 변경 후 git add, commit 하지 않더라도 변경 내용이 반영됨
+    - 단점: 설정이 변경된 경우, 이를 사용하는 각 microservice 모두 .../actuator/refresh를 호출해줘야 함
+  - (3) Spring Cloud Bus 사용 → 다음 section 9에서 설명
+
+### Profiles을 사용한 Configuration 적용
+- config server에서 사용하는 yml 파일을 여러 profile로 나눔
+  - ex. ecommerce.yml, ecommerce-dev.yml, ecommerce-prod.yml
+- 각 service의 bootstrap.yml에서 spring.profiles.active에 사용할 프로파일을 지정
+  - cf. java tool의 -jar 옵션으로 jar 파일을 실행시킬 때 -D 옵션으로 system property를 이용해 실행할 프로파일을 지정할 수도 있음 
+    - ex. -Dspring.profiles.active=dev
+    - 참고([JDK 21 Documentation](https://docs.oracle.com/en/java/javase/21/index.html) → JDK Tool Specifications(Tools) → java(All Platforms))
+      - https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html#using-the-jdk_java_options-launcher-environment-variable
+      - 혹은 위 문서 Standard Options for Java 부분의 -Dproperty=value 부분 참고
+
+### Remote Git Repository
+- config server에서 사용하고 있던 local repository를 remote repository(ex. gitHub)로 push하기
+  - 보안상 필요하다면 private repository로 설정
+  - git remote -v로 현재 remote 정보 확인
+  - git remote add origin {remote repository url}로 remote repository를 origin이라는 이름으로 등록하기
+    - 다시 git remote -v를 이용해 변경된 remote 정보를 확인할 수 있음
+  - 처음 push할 때는 git push --set-upstream origin main으로 upstream branch를 설정(remote의 main과 local의 main을 동기화)
+- config server에서 불러오는 설정 정보의 경로를 재설정
+  - 기존에 사용하던 파일 시스템 경로는 주석 처리
+  - 위의 remote repository url로 경로 설정
+    - private repository라면 username과 password까지 명시
+- config-service 실행 후 .../ecommerce/default, .../ecommerce/dev, .../ecommerce/prod로 접속하여 remote의 설정 정보를 잘 가져오는 것을 확인
+  - config-service를 종료하지 않은 상태에서 설정 정보를 변경 후 remote repository에 push하면
+  - 변경된 remote 설정 정보를 config-service에서 잘 가져오는 것을 확인할 수 있음
+- 참고
+  - [Spring 공식 - Spring Cloud Config/Spring Cloud Config Server/Environment Repository/Git Backend](https://docs.spring.io/spring-cloud-config/reference/server/environment-repository/git-backend.html)
+
+### Native File Repository → native 프로파일에서 동작하는 file system backend 이용하기
+- git을 사용하지 않고, file system의 파일을 그대로 설정 정보로 사용하는 방법
+  - spring.cloud.config.server.git.uri=file:///...으로 명시하는 것은 파일 시스템을 이용하지만 파일 시스템에 있는 git을 이용하는 것
+  - spring.cloud.config.server.native.search-locations=file:///...은 git을 전혀 사용하지 않고 파일 시스템에 있는 파일을 직접 사용하는 것
+  - cf. Windows의 경우 file:///로 명시, 그 외의 경우 file:// 로 명시 
+    - cf. Windows에서 native를 사용할 때 file:///이 아닌 file:\\\ 로 작성하면 오류 발생
+- 이 때 spring.profiles.active=native로 명시해줘야 함
+  - 즉 native라는 프로파일을 사용할 때만 file system에서 직접 설정 정보를 불러올 수 있음
+- 참고
+  - [Spring 공식 - Spring Cloud Config/Spring Cloud Config Server/Environment Repository/File System Backend](https://docs.spring.io/spring-cloud-config/reference/server/environment-repository/file-system-backend.html)
+  - [기타 블로그 - 위 공식 문서 번역](https://godekdls.github.io/Spring%20Cloud%20Config/spring-cloud-config-server/#file-system-backend)

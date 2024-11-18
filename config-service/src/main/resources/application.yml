@@ -1,0 +1,21 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-service
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///${user.home}/native-file-repo
+        git:
+          # serve할 대상 config의 git uri → 로컬 파일 시스템에 있는 git도 가능, 해당 경로의 git에 있는 yml 파일 설정 정보를 불러옴
+          # (1) file system의 local repository를 사용한 경우
+#          uri: file:///${user.home}/git-local-repo
+          # (2) remote repository를 사용한 경우
+          uri: https://github.com/rugii913/spring-cloud-config-ex.git
+#          username: ...
+#          password: ...

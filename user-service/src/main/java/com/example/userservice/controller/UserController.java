@@ -25,8 +25,18 @@ public class UserController {
 
     @GetMapping("/health-check")
     public ResponseEntity<String> status() {
-        return ResponseEntity.ok(
-                String.format("user-service works well on port %s", env.getProperty("local.server.port"))
+        return ResponseEntity.ok("""
+                User-service works well.
+                local.server.port(from Environment object) = %s
+                server.port(from application.yml file in project) = %s
+                jwt-config.expiration-duration-in-minutes(from config server) = %s
+                jwt-config.secret-key-string(from config server) = %s
+                """.formatted(
+                        env.getProperty("local.server.port"),
+                        env.getProperty("server.port"),
+                        env.getProperty("jwt-config.expiration-duration-in-minutes"),
+                        env.getProperty("jwt-config.secret-key-string")
+                )
         );
     }
 
